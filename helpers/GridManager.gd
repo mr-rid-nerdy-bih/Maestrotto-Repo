@@ -7,37 +7,48 @@ const CELL_SIZE: float = 16.0
 @onready var beltLayer = game.get_node("TileMapLayer")
 
 var grid = {}
-var belts = {}
-var scenes = {"NoteDrill": preload("uid://noy2ufrybire"),
-			  "Packager":  preload("uid://dfh8b07mvb7o3")}
-var beltScene = preload("uid://b77a1shbdt0jj")
+var belt_nodes: Array = [] # Stores references to active Line2D Belt nodes
+var scenes = {
+	"NoteDrill": preload("uid://noy2ufrybire"),
+	"Packager": preload("uid://dfh8b07mvb7o3"),
+	"Chute": preload("uid://cg55wwh43ukct"),
+	"CopperCanister": preload("uid://bnyw62cylevfh"),
+}
+var beltScene = preload("uid://dccu7jyorgrny")
 
 func _ready() -> void:
 	TimeGlobal.ticked.connect(_on_tick)
+
+func get_new_building(building):
+	if not scenes.has(building):
+		print("No building named ", building)
+		return null
+	return scenes.get(building).instantiate()
 
 func get_coords_at(pos):
 	var localPos = beltLayer.to_local(pos)
 	return beltLayer.local_to_map(localPos)
 
+func get_global_at(cell):
+	return cell * CELL_SIZE
+
 func get_building_at(cell):
 	if not grid.has(cell):
-		print("Cell at grid is unoccupied")
-		return
+		return null
 	var machine = grid[cell]
 	if not is_instance_valid(machine):
 		grid.erase(cell)
-		return
+		return null
 	return machine
 
 func get_belt_at(cell):
-	if not belts.has(cell):
-		print("Cell has no belt.")
-		return
-	var belt = belts[cell]
-	return belt
-
-func get_new_building(building):
-	return scenes.get(building).instantiate()
+	for belt in belt_nodes:
+		if not is_instance_valid(belt):
+			continue
+		for entry in belt.belts:
+			if Vector2i(entry["cell"]) == cell:
+				return belt
+	return null
 
 func has_machine_at(cell):
 	if not grid.has(cell):
@@ -48,45 +59,51 @@ func has_machine_at(cell):
 	return true
 
 func has_belt_at(cell):
-	if not belts.has(cell):
-		return false
-	return true
+	return get_belt_at(cell) != null
 
-func place_machine_at(building, cell):
+func place_building_at(building, cell):
 	if not scenes.has(building):
-		print("Oi bruv theres no building named ", building)
+		print("No building named ", building)
 		return
 	if grid.has(cell) and is_instance_valid(grid[cell]):
 		grid[cell].queue_free()
 	var newBuilding = scenes.get(building).instantiate()
 	newBuilding.cell = cell
 	newBuilding.tickBirth = TimeGlobal.tick
-	newBuilding.global_position = Vector2(cell) * GridManager.CELL_SIZE
+	newBuilding.global_position = Vector2(cell) * CELL_SIZE
 	game.add_child(newBuilding)
 	grid[cell] = newBuilding
 
-func place_belt_at(cell, dir):
-	if belts.has(cell) and is_instance_valid(belts[cell]):
-		belts[cell].queue_free()
+func erase_building_at(cell):
+	if grid.has(cell) and is_instance_valid(grid[cell]):
+		grid[cell].queue_free()
+		grid.erase(cell)
+
+func place_belt_at(cell, cell1):
+	if has_belt_at(cell): 
+		var belt = get_belt_at(cell)
+		if is_instance_valid(belt): belt.queue_free()
+	if has_belt_at(cell1): 
+		var belt = get_belt_at(cell1)
+		if is_instance_valid(belt): belt.queue_free()
 		
 	var newBelt = beltScene.instantiate()
 	newBelt.cell = cell
-	newBelt.rotation_degrees = dir
-	newBelt.global_position = Vector2(cell) * GridManager.CELL_SIZE
+	newBelt.cell1 = cell1
 	
-	belts[cell] = newBelt
-	print("Placed belt at ", cell)
+	game.add_child(newBelt)
+	belt_nodes.append(newBelt)
+	print("Placed belt spanning from ", cell, " to ", cell1)
+
+func erase_belt_at(cell):
+	var belt = get_belt_at(cell)
+	if belt and is_instance_valid(belt):
+		# Clear tiles from the tilemap layer before freeing
+		for entry in belt.belts:
+			beltLayer.erase_cell(entry["cell"])
+		belt_nodes.erase(belt)
+		belt.queue_free()
+		print("Erased belt containing cell: ", cell)
 
 func _on_tick():
-	var keysToRemove = []
-	for cell in belts.keys():
-		var belt = belts[cell]
-		if not is_instance_valid(belt):
-			keysToRemove.append(cell)
-			continue
-		if beltLayer.get_cell_source_id(belt.cell) == -1:
-			beltLayer.set_cell(belt.cell, 1, belt.get_coords())
-			game.add_child(belt)
-			print("Belt placed at ", belt.cell)
-	for cell in keysToRemove:
-		belts.erase(cell)
+	belt_nodes = belt_nodes.filter(func(b): return is_instance_valid(b))

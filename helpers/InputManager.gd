@@ -1,6 +1,6 @@
 extends Node
 
-var linkingBuilding: Building
+var linkingBuilding
 var beltStart: Vector2i = Vector2i(-1, -1)
 var isDraggingBelt: bool = false
 
@@ -16,56 +16,75 @@ func _unhandled_input(event: InputEvent) -> void:
 	if hasBuilding: buildingAtCell = GridManager.get_building_at(cell)
 	if hasBelt: beltAtCell = GridManager.get_belt_at(cell)
 	
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			if isDraggingBelt and event.is_released():
-				isDraggingBelt = false
-				print("RELEASED - Start: ", beltStart, " End Cell: ", cell)
-				if beltStart != Vector2i(-1, -1):
-					var pathCells = calculateBeltPath(beltStart, cell)
-					preview.belt([], false)
-					for i in pathCells:
-						GridManager.place_belt_at(i[0], i[1])
-						print("Placed belt at grid cell: ", i[0])
-				beltStart = Vector2i(-1, -1)
-				return
+	if event.is_action("build"):
+		if isDraggingBelt and event.is_released():
+			isDraggingBelt = false
 			
-			if event.is_shift_pressed():
-				if event.is_pressed():
-					beltStart = cell
-					isDraggingBelt = true
-					print("STARTED DRAG at cell: ", beltStart)
-					return
-			elif event.is_pressed():
-				GridManager.place_machine_at(preview.getCurrentBuilding(), cell)
-				print("Placed building (", preview.getCurrentBuilding(), ") at ", cell)
+			preview.belt([], false)
+			
+			if !(beltStart == Vector2i(-1, -1)):
+				GridManager.place_belt_at(beltStart, cell)
+			beltStart = Vector2i(-1, -1)
+			
+			return
+		
+		if event.is_shift_pressed():
+			if event.is_pressed():
+				beltStart = cell
+				isDraggingBelt = true
+				print("STARTED DRAG at cell: ", beltStart)
+				return
+		
+		elif event.is_pressed():
+			GridManager.place_building_at(preview.getCurrentBuilding(), cell)
+			print("Placed building (", preview.getCurrentBuilding(), ") at ", cell)
 				
 	elif event is InputEventMouseMotion and isDraggingBelt:
 		if beltStart != Vector2i(-1, -1):
 			var pathCells = calculateBeltPath(beltStart, cell)
 			preview.belt(pathCells, true)
 	
+	if event.is_action_pressed("erase"):
+		GridManager.erase_building_at(cell)
+		GridManager.erase_belt_at(cell)
+	
 	if event.is_action_pressed("link"):
 		if linkingBuilding:
 			if hasBuilding:
-				if buildingAtCell.get_script() in linkingBuilding.validOutputBuildings:
-					linkingBuilding.toTransport = buildingAtCell
-					print("Linked building ", linkingBuilding, " with building ", buildingAtCell, " at ", cell)
-					linkingBuilding = null
+				if linkingBuilding is Building:
+					if buildingAtCell.get_script() in linkingBuilding.validOutputBuildings:
+						linkingBuilding.toTransport = buildingAtCell
+						print("Linked building ", linkingBuilding, " with building ", buildingAtCell, " at ", cell)
+						linkingBuilding = null
+						return
+				elif linkingBuilding is Belt:
+					if buildingAtCell.get_script() in linkingBuilding.validOutputBuildings:
+						linkingBuilding.toTransport = buildingAtCell
+						print("Linked belt ", linkingBuilding, " with building ", buildingAtCell, " at ", cell)
+						linkingBuilding = null
+						return
 			if hasBelt:
-				print(linkingBuilding.validOutputBuildings)
 				if Belt in linkingBuilding.validOutputBuildings:
 					linkingBuilding.toTransport = beltAtCell
 					print("Linked building ", linkingBuilding, " with belt ", beltAtCell)
 					linkingBuilding = null
+			if linkingBuilding: print("Not able to link this building.")
+			linkingBuilding = null
 		else:
-			if buildingAtCell is Building:
+			if hasBuilding:
 				linkingBuilding = buildingAtCell
-				print("Linking building ", buildingAtCell, " at ", cell)
+				print("Linking object ", buildingAtCell, " at ", cell)
+			if hasBelt:
+				linkingBuilding = beltAtCell
+				print("Linking belt ", beltAtCell, " at ", cell)
 				
 	if event.is_action_pressed("cycleUp") or event.is_action_pressed("cycleDown"):
 		preview.changePreview(event, false)
 		print("Cycling.. current building number is ", preview.cycleNum)
+	
+	if event.is_action_pressed("debug"):
+		if hasBuilding:
+			print("Building type: ", typeof(buildingAtCell), ", input inventory: ", buildingAtCell.inputInventory," output inventory: ", buildingAtCell.outputInventory)
 
 func calculateBeltPath(start: Vector2i, end: Vector2i) -> Array:
 	var pathCells = []

@@ -31,7 +31,4 @@ func _on_tick():
 			else:
 				stopAnim = true
 		
-		if toTransport and outputInventory.size() > 0 and toTransport.inputInventory.size() <= toTransport.maxInput:
-			var targetItem = outputInventory[0]
-			toTransport.inputInventory.append(targetItem)
-			outputInventory.erase(targetItem)
+		transport_to(false)

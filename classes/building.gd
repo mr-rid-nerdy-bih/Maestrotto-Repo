@@ -64,3 +64,19 @@ func link_to_building(buildingCell):
 		return
 	
 	toTransport = buildingOnGrid
+
+func transport_to(passThroughInput: bool = false):
+	if !toTransport:
+		return
+	if toTransport.inputInventory.size() >= toTransport.maxInput:
+		return
+	if passThroughInput:
+		outputInventory = inputInventory
+		inputInventory = []
+	if toTransport is Belt:
+		if !toTransport.canInput: return
+	
+	if outputInventory.size() > 0:
+		var item = outputInventory[0]
+		toTransport.inputInventory.append(item)
+		outputInventory.erase(item)

@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://bnyw62cylevfh"]
+
+[ext_resource type="Script" uid="uid://cikgo53is1kkt" path="res://objects/machines/copper_canister/copper_canister.gd" id="1_0yqwq"]
+[ext_resource type="Texture2D" uid="uid://vrhksmdyec5a" path="res://assets/copper_canister.png" id="2_non5n"]
+
+[node name="CopperCanister" type="Node2D" unique_id=921920767]
+script = ExtResource("1_0yqwq")
+texture = ExtResource("2_non5n")
+offset = Vector2(0, -8)

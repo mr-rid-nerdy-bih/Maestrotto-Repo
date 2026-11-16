@@ -1,10 +1,10 @@
-class_name Belt
 extends Node2D
 
 var cell: Vector2i
 var currentLerp: float = 0.0
 var isPreview: bool = false
 var previewTexture = preload("uid://bnd0nas1gxf3s")
+
 
 @onready var game = get_tree().current_scene
 

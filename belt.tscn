@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://dccu7jyorgrny"]
+
+[ext_resource type="Script" uid="uid://b764r7qmqb13j" path="res://line_2d.gd" id="1_0e48y"]
+
+[node name="Belt" type="Line2D" unique_id=1741882474]
+width = 0.0
+script = ExtResource("1_0e48y")
