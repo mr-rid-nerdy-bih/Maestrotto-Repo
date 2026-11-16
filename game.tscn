@@ -1,0 +1,71 @@
+[gd_scene format=3 uid="uid://fu36mcowqf1u"]
+
+[ext_resource type="Script" uid="uid://c58ysjf6yc6hv" path="res://helpers/test.gd" id="1_80nbo"]
+[ext_resource type="Texture2D" uid="uid://btjal1bg54gjf" path="res://assets/conveyors.png" id="3_feb5d"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fc0e3"]
+texture = ExtResource("3_feb5d")
+0:0/animation_columns = 4
+0:0/animation_speed = 10.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+0:1/animation_columns = 4
+0:1/animation_speed = 10.0
+0:1/animation_frame_0/duration = 1.0
+0:1/animation_frame_1/duration = 1.0
+0:1/animation_frame_2/duration = 1.0
+0:1/animation_frame_3/duration = 1.0
+0:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+0:2/animation_columns = 4
+0:2/animation_speed = 10.0
+0:2/animation_frame_0/duration = 1.0
+0:2/animation_frame_1/duration = 1.0
+0:2/animation_frame_2/duration = 1.0
+0:2/animation_frame_3/duration = 1.0
+0:2/0 = 0
+4:2/0 = 0
+5:2/0 = 0
+0:3/animation_columns = 4
+0:3/animation_speed = 10.0
+0:3/animation_frame_0/duration = 1.0
+0:3/animation_frame_1/duration = 1.0
+0:3/animation_frame_2/duration = 1.0
+0:3/animation_frame_3/duration = 1.0
+0:3/0 = 0
+4:3/0 = 0
+5:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_7jktm"]
+sources/1 = SubResource("TileSetAtlasSource_fc0e3")
+
+[node name="Game" type="Node2D" unique_id=1031880535]
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=654517079]
+zoom = Vector2(3, 3)
+
+[node name="Timer" type="Timer" parent="." unique_id=1563965587]
+wait_time = 0.05
+autostart = true
+
+[node name="Preview" type="Node2D" parent="." unique_id=2117314456]
+script = ExtResource("1_80nbo")
+
+[node name="Belt" type="Node2D" parent="Preview" unique_id=1283420426]
+
+[node name="Machines" type="Node2D" parent="Preview" unique_id=265225942]
+
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1551296482]
+tile_set = SubResource("TileSet_7jktm")
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

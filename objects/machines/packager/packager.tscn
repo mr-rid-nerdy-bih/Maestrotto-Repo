@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://dfh8b07mvb7o3"]
+
+[ext_resource type="Script" uid="uid://rlhohsxfpral" path="res://objects/machines/packager/packager.gd" id="1_yxxc2"]
+[ext_resource type="Texture2D" uid="uid://dw5f57nnrb1gk" path="res://assets/packager.png" id="2_1hnuo"]
+
+[node name="Packager" type="Node2D" unique_id=119034053]
+script = ExtResource("1_yxxc2")
+texture = ExtResource("2_1hnuo")
+offset = Vector2(2, -1)

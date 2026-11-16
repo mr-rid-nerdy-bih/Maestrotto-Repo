@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://noy2ufrybire"]
+
+[ext_resource type="Script" uid="uid://smv6u5dhjeoo" path="res://objects/machines/note_drill/note_drill.gd" id="1_edghp"]
+[ext_resource type="Texture2D" uid="uid://c5dh248tp7ndc" path="res://assets/drill.png" id="2_bomft"]
+
+[node name="NoteDrill" type="Node2D" unique_id=492673551]
+script = ExtResource("1_edghp")
+cooldown = 40
+texture = ExtResource("2_bomft")
+isAnimated = true
+hframes = 6
+offset = Vector2(0, -6)
+frameTime = 2.0

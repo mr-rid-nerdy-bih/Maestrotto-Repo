@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://b77a1shbdt0jj"]
+
+[ext_resource type="Script" uid="uid://d0osspumr2wbv" path="res://machines/belts/belt.gd" id="1_gobii"]
+[ext_resource type="Texture2D" uid="uid://bnd0nas1gxf3s" path="res://asset_destination/belt_indicator.png" id="2_a1q4n"]
+
+[node name="Node2D" type="Node2D" unique_id=156354388]
+rotation = 1.5707964
+script = ExtResource("1_gobii")
+speed = null
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1873769566]
+visible = false
+texture = ExtResource("2_a1q4n")
