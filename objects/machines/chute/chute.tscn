@@ -1,9 +1,0 @@
-[gd_scene format=3 uid="uid://cg55wwh43ukct"]
-
-[ext_resource type="Script" uid="uid://duwtx8ruxj5xi" path="res://objects/machines/chute/chute.gd" id="1_m3o5a"]
-[ext_resource type="Texture2D" uid="uid://uofrtowrsmvg" path="res://assets/chute.png" id="2_cdula"]
-
-[node name="Chute" type="Node2D" unique_id=1231552410]
-script = ExtResource("1_m3o5a")
-texture = ExtResource("2_cdula")
-offset = Vector2(2, -1)

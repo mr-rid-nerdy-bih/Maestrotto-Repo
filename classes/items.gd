@@ -1,9 +1,7 @@
 class_name Item
 extends Node2D
 
-@export var itemName: String
-@export_multiline var description: String
-@export var frame: int
+@export var itemResource: ItemResource
 
 var sprite: Sprite2D = Sprite2D.new()
 var texture: Texture
@@ -18,6 +16,6 @@ func _ready() -> void:
 	sprite.hframes = texture.get_width() / 10
 	sprite.vframes = texture.get_height() / 13
 	sprite.offset = Vector2(0, 0)
-	sprite.frame = frame
+	sprite.frame = itemResource.frame
 	
 	add_child(sprite)

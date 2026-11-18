@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://dccu7jyorgrny"]
+
+[ext_resource type="Script" uid="uid://b764r7qmqb13j" path="res://objects/belts/belt.gd" id="1_nnvwe"]
+[ext_resource type="Script" uid="uid://c3rlmc2fuumsj" path="res://objects/components/inventory_component.gd" id="2_l8d1h"]
+[ext_resource type="Script" uid="uid://2ddanjtimqfw" path="res://objects/components/transport_component.gd" id="3_3uai4"]
+
+[node name="Belt" type="Line2D" unique_id=1741882474 node_paths=PackedStringArray("transportComponent", "inventoryComponent")]
+width = 0.0
+script = ExtResource("1_nnvwe")
+transportComponent = NodePath("TransportComponent")
+inventoryComponent = NodePath("InventoryComponent")
+
+[node name="InventoryComponent" type="Node2D" parent="." unique_id=1825967995]
+script = ExtResource("2_l8d1h")
+
+[node name="TransportComponent" type="Node2D" parent="." unique_id=816156823 node_paths=PackedStringArray("inventoryComponent")]
+script = ExtResource("3_3uai4")
+inventoryComponent = NodePath("../InventoryComponent")

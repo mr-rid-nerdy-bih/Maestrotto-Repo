@@ -1,0 +1,133 @@
+[gd_scene format=3 uid="uid://fu36mcowqf1u"]
+
+[ext_resource type="Script" uid="uid://c58ysjf6yc6hv" path="res://helpers/test.gd" id="1_80nbo"]
+[ext_resource type="Script" uid="uid://cf862ut2hjasl" path="res://linkingLines.gd" id="3_fc0e3"]
+[ext_resource type="Texture2D" uid="uid://btjal1bg54gjf" path="res://assets/conveyors.png" id="3_feb5d"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fc0e3"]
+texture = ExtResource("3_feb5d")
+0:0/animation_columns = 4
+0:0/animation_speed = 10.0
+0:0/animation_frame_0/duration = 1.0
+0:0/animation_frame_1/duration = 1.0
+0:0/animation_frame_2/duration = 1.0
+0:0/animation_frame_3/duration = 1.0
+0:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+0:1/animation_columns = 4
+0:1/animation_speed = 10.0
+0:1/animation_frame_0/duration = 1.0
+0:1/animation_frame_1/duration = 1.0
+0:1/animation_frame_2/duration = 1.0
+0:1/animation_frame_3/duration = 1.0
+0:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+0:2/animation_columns = 4
+0:2/animation_speed = 10.0
+0:2/animation_frame_0/duration = 1.0
+0:2/animation_frame_1/duration = 1.0
+0:2/animation_frame_2/duration = 1.0
+0:2/animation_frame_3/duration = 1.0
+0:2/0 = 0
+4:2/0 = 0
+5:2/0 = 0
+0:3/animation_columns = 4
+0:3/animation_speed = 10.0
+0:3/animation_frame_0/duration = 1.0
+0:3/animation_frame_1/duration = 1.0
+0:3/animation_frame_2/duration = 1.0
+0:3/animation_frame_3/duration = 1.0
+0:3/0 = 0
+4:3/0 = 0
+5:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_7jktm"]
+sources/1 = SubResource("TileSetAtlasSource_fc0e3")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e2o6t"]
+bg_color = Color(0.278, 0.278, 0.278, 0.671)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_feb5d"]
+bg_color = Color(0.278, 0.278, 0.278, 0.671)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fc0e3"]
+bg_color = Color(0.278, 0.278, 0.278, 0.671)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7jktm"]
+bg_color = Color(0.278, 0.278, 0.278, 0.671)
+
+[node name="Game" type="Node2D" unique_id=1031880535]
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=654517079]
+zoom = Vector2(3, 3)
+
+[node name="Timer" type="Timer" parent="." unique_id=1563965587]
+wait_time = 0.05
+autostart = true
+
+[node name="Preview" type="Node2D" parent="." unique_id=2117314456]
+script = ExtResource("1_80nbo")
+
+[node name="Belt" type="Node2D" parent="Preview" unique_id=1283420426]
+
+[node name="Machines" type="Node2D" parent="Preview" unique_id=265225942]
+
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1551296482]
+tile_set = SubResource("TileSet_7jktm")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=880000993]
+
+[node name="Control" type="Control" parent="CanvasLayer" unique_id=1599877539]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/Control" unique_id=121898440]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -91.29999
+offset_top = -59.0
+offset_right = 91.29999
+offset_bottom = -15.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Build" type="Panel" parent="CanvasLayer/Control/HBoxContainer" unique_id=1053642087]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_e2o6t")
+
+[node name="Panel2" type="Panel" parent="CanvasLayer/Control/HBoxContainer" unique_id=1744513674]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_feb5d")
+
+[node name="Panel3" type="Panel" parent="CanvasLayer/Control/HBoxContainer" unique_id=188147218]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_fc0e3")
+
+[node name="Panel4" type="Panel" parent="CanvasLayer/Control/HBoxContainer" unique_id=1377239613]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_7jktm")
+
+[node name="Links" type="Node2D" parent="." unique_id=244159567]
+script = ExtResource("3_fc0e3")
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

@@ -1,8 +1,0 @@
-[gd_scene format=3 uid="uid://b77a1shbdt0jj"]
-
-[ext_resource type="Script" uid="uid://d0osspumr2wbv" path="res://objects/machines/belts/belt.gd" id="1_gobii"]
-
-[node name="Belt" type="Node2D" unique_id=156354388]
-rotation = 1.5707964
-script = ExtResource("1_gobii")
-speed = 1.565

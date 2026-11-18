@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuildingResource" format=3 uid="uid://2tv6jy4jknwo"]
+
+[ext_resource type="Script" uid="uid://cpxvtu6cs2fuq" path="res://itemResource.gd" id="1_4fn4m"]
+[ext_resource type="Script" uid="uid://clfio2dyahcm3" path="res://buildingResource.gd" id="2_fvoma"]
+[ext_resource type="Texture2D" uid="uid://vrhksmdyec5a" path="res://assets/copper_canister.png" id="3_fvoma"]
+
+[resource]
+script = ExtResource("2_fvoma")
+building_name = "Copper Canister"
+building_type = 5
+texture = ExtResource("3_fvoma")
+offset = Vector2(0, -8)
+validOutputBuildings = Array[int]([2])
+passThroughInput = true
+metadata/_custom_type_script = "uid://clfio2dyahcm3"
