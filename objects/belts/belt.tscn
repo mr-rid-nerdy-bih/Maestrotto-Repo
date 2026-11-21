@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://clfio2dyahcm3" path="res://helpers/building_resource.gd" id="3_d5ujk"]
 [ext_resource type="Script" uid="uid://bl7k5mv2g72jt" path="res://objects/components/linking_component.gd" id="6_gnr3f"]
 [ext_resource type="Script" uid="uid://bsyar25g6weee" path="res://objects/components/visual_component.gd" id="7_d5ujk"]
+[ext_resource type="Script" uid="uid://c8dtwrm55fflr" path="res://objects/components/generate_item_component.gd" id="8_gnr3f"]
 
 [sub_resource type="Resource" id="Resource_3uai4"]
 script = ExtResource("3_d5ujk")
@@ -39,3 +40,7 @@ width = 0.0
 
 [node name="VisualComponent" type="Node2D" parent="." unique_id=78794779]
 script = ExtResource("7_d5ujk")
+
+[node name="GenerateItemComponent" type="Node2D" parent="." unique_id=1647882539 node_paths=PackedStringArray("inventoryComponent")]
+script = ExtResource("8_gnr3f")
+inventoryComponent = NodePath("../InventoryComponent")

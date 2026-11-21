@@ -30,7 +30,7 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	worldMousePos = GridManager.cam.get_global_mouse_position()
 	cell = GridManager.get_coords_at(worldMousePos)
-	hasBuilding = GridManager.has_machine_at(cell)
+	hasBuilding = GridManager.has_building_at(cell)
 	if hasBuilding: buildingAtCell = GridManager.get_building_at(cell)
 	
 	if event.is_action_pressed("build"):
@@ -54,7 +54,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		1: buildFunc(event)
 		2: eraseFunc(event)
 		3: linkFunc(event)
-
+	
 	
 	if event.is_action_pressed("cycleUp") or event.is_action_pressed("cycleDown"):
 		preview.changePreview(event, false)
@@ -128,7 +128,6 @@ func calculateBeltPath(start: Vector2i, end: Vector2i) -> Dictionary:
 				current.y += sign(end.y - current.y)
 			beltCells1.append([current, 0.0])
 			
-		# Calculate rotations for first segment
 		for i in range(beltCells.size()):
 			var c = beltCells[i][0]
 			var dir = 0.0
@@ -140,7 +139,6 @@ func calculateBeltPath(start: Vector2i, end: Vector2i) -> Dictionary:
 					dir = getRotationFromVector(beltCells1[0][0] - c)
 			beltCells[i][1] = dir
 			
-		# Calculate rotations for second segment
 		for i in range(beltCells1.size()):
 			var c = beltCells1[i][0]
 			var dir = 0.0
@@ -196,9 +194,7 @@ func buildFunc(event):
 			isDraggingBelt = false
 			preview.belt([], false)
 			if beltStart:
-				if pathCells["cornerCell"]:
-					GridManager.place_belt_at(beltStart, cell)
-				else:
+				if pathCells["cornerCell"] == null:
 					GridManager.place_belt_at(beltStart, cell)
 			beltStart = empty
 			return
@@ -221,7 +217,7 @@ func placeBuildingAtCurrentCell():
 	var currentBuilding = preview.getCurrentBuilding()
 	var currentBuildingType = currentBuilding.class
 	var currentBuildingDir = currentBuilding.dir
-	if currentBuildingType and not GridManager.has_machine_at(cell):
+	if currentBuildingType and not GridManager.has_building_at(cell):
 		GridManager.place_building_at(currentBuildingType, cell, currentBuildingDir)
 		print("Placed building (", currentBuildingType, ") at ", cell)
 

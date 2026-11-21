@@ -99,3 +99,6 @@ func child_items() -> void:
 			item.global_position = line2D.get_point_position(0)
 			item.z_index = 10
 			game.add_child(item)
+
+func _on_tick() -> void:
+	pass
