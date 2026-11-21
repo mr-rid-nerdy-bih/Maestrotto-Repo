@@ -10,7 +10,7 @@ func _process(_delta: float) -> void:
 		var cell1: Vector2i = links[cell]["to"]
 		var fromPos = GridManager.get_global_at(cell) + halfCell
 		var toPos = GridManager.get_global_at(cell1) + halfCell
-		var type = links[cell]["endBuildingType"]
+		var type: BuildingTypes.Type = links[cell]["endBuildingType"]
 		
 		if not linkLines.has(cell):
 			var line = Line2D.new()
@@ -18,7 +18,8 @@ func _process(_delta: float) -> void:
 			
 			line.default_color = Color.RED
 			match type:
-				Belt: line.default_color = Color.RED
+				BuildingTypes.Type.PACKAGER: line.default_color = Color.GREEN
+				BuildingTypes.Type.CHUTE: line.default_color = Color.ORANGE
 			
 			line.z_index = 20
 			line.add_point(fromPos)
@@ -37,20 +38,11 @@ func _process(_delta: float) -> void:
 			return
 		
 		var cell1: Vector2i = links[cell]["to"]
-		var fromType: BuildingTypes.Type = links[cell]["startBuildingType"]
-		var toType: BuildingTypes.Type = links[cell]["endBuildingType"]
 		var fromBuilding
 		var toBuilding
 		
-		if fromType == BuildingTypes.Type.BELT:
-			fromBuilding = GridManager.get_belt_at(cell)
-		else:
-			fromBuilding = GridManager.get_building_at(cell)
-		
-		if toType == BuildingTypes.Type.BELT:
-			toBuilding = GridManager.get_belt_at(cell1)
-		else:
-			toBuilding = GridManager.get_building_at(cell1)
+		fromBuilding = GridManager.get_building_at(cell)
+		toBuilding = GridManager.get_building_at(cell1)
 		
 		print(fromBuilding,",",toBuilding)
 		if not (fromBuilding and toBuilding):

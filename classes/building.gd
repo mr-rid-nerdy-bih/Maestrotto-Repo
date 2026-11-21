@@ -13,29 +13,46 @@ var tickBirth: int
 var isActive: bool = true
 var type
 
+var inputCells: Array[Vector2i]
+var outputCells: Array[Vector2i]
+
+var behaviorInstance
+
 func _process(delta: float) -> void:
-	visualComponent.preview_loop()
+	if visualComponent:
+		visualComponent.preview_loop()
+	
+	if buildingResource:
+		type = buildingResource.buildingType
+		if buildingResource.customBehavior:
+			behaviorInstance = buildingResource.customBehavior.new()
+			if behaviorInstance and "building" in behaviorInstance:
+				behaviorInstance.building = self
 
 func _ready() -> void:
-	visualComponent.set_sprite()
-	visualComponent.set_pos()
+	if visualComponent:
+		visualComponent.set_sprite()
+		visualComponent.set_pos()
+		if visualComponent.isPreview:
+			return
 	
-	if visualComponent.isPreview:
-		return
-	
-	type = buildingResource.building_type
+	if buildingResource:
+		type = buildingResource.buildingType
+		inputCells = buildingResource.inputCells
+		outputCells = buildingResource.outputCells
 	
 	TimeGlobal.ticked.connect(_on_tick)
 
-func _on_tick():
-	if isActive:
+func _on_tick() -> void:
+	if not isActive or not buildingResource:
+		return
+	
+	if visualComponent:
 		visualComponent.animate()
-		if buildingResource.canGenerate:
-			generateComponent.generate()
+	if buildingResource.canGenerate and generateComponent:
+		generateComponent.generate()
+	if transportComponent:
 		transportComponent.transport_to()
-		
-		buildingResource.customBehavior(self)
-
-func link_to_building(building):
-	transportComponent.toTransport = building
-	linkingComponent.setLinkAtLinkGroup()
+	
+	if not buildingResource.customBehaviorUsesProcess:
+		buildingResource.custom_behavior(self)

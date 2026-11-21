@@ -11,7 +11,7 @@ var isBuildingDragged: bool = false
 
 var linkingBuilding
 var beltStart: Vector2i
-var empty = Vector2i(143612346,71209164509346)
+var empty = Vector2i(197256439047,71209164509346)
 var isDraggingBelt: bool = false
 
 @onready var preview: Node2D = get_tree().current_scene.get_node("Preview")
@@ -31,9 +31,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	worldMousePos = GridManager.cam.get_global_mouse_position()
 	cell = GridManager.get_coords_at(worldMousePos)
 	hasBuilding = GridManager.has_machine_at(cell)
-	hasBelt = GridManager.has_belt_at(cell)
 	if hasBuilding: buildingAtCell = GridManager.get_building_at(cell)
-	if hasBelt: beltAtCell = GridManager.get_belt_at(cell)
 	
 	if event.is_action_pressed("build"):
 		if currentMode == 1:
@@ -256,40 +254,14 @@ func linkFunc(event):
 					print("unlink")
 					return
 				
-				if buildingAtCell.buildingResource.building_type in linkingBuilding.buildingResource.validOutputBuildings:
+				if buildingAtCell.buildingResource.buildingType in linkingBuilding.buildingResource.validOutputBuildings:
 					linkingBuilding.link_to_building(buildingAtCell)
 					print("Linked building ", linkingBuilding, " with building ", buildingAtCell, " at ", cell)
 					linkingBuilding = null
 					return
-			elif linkingBuilding is Belt:
-				if linkingBuilding.transportComponent.toTransport == buildingAtCell:
-					print("No")
-					linkingBuilding.link_to_building(null)
-					linkingBuilding = null
-					print("unlink")
-					return
-				
-				if buildingAtCell.buildingResource.building_type in linkingBuilding.validOutputBuildings:
-					if linkingBuilding.transportComponent.toTransport == beltAtCell:
-						beltAtCell.link_to_building(null)
-						return
-					
-					linkingBuilding.link_to_building(buildingAtCell)
-					print("Linked belt ", linkingBuilding, " with building ", buildingAtCell, " at ", cell)
-					linkingBuilding = null
-					return
-		if hasBelt:
-			if linkingBuilding is Belt: return
-			if linkingBuilding.buildingResource.canUseBelt:
-				linkingBuilding.link_to_building(beltAtCell)
-				print("Linked building ", linkingBuilding, " with belt ", beltAtCell)
-				linkingBuilding = null
 		if linkingBuilding: print("Not able to link this building.")
 		linkingBuilding = null
 	else:
 		if hasBuilding:
 			linkingBuilding = buildingAtCell
 			print("Linking object ", buildingAtCell, " at ", cell)
-		if hasBelt:
-			linkingBuilding = beltAtCell
-			print("Linking belt ", beltAtCell, " at ", cell)

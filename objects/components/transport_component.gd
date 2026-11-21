@@ -10,11 +10,11 @@ func transport_to():
 		toTransport = null
 		return
 	
-	var parent_building = get_parent()
-	if not parent_building or not "buildingResource" in parent_building:
+	var parentBuilding = get_parent()
+	if not parentBuilding or not "buildingResource" in parentBuilding:
 		return
 		
-	var buildingResource: BuildingResource = parent_building.buildingResource
+	var buildingResource: BuildingResource = parentBuilding.buildingResource
 	if !buildingResource:
 		return
 
@@ -40,17 +40,17 @@ func transport_to():
 		return
 
 	# Check if target is a belt or building and verify capacity
-	var is_target_belt = false
+	var isTargetBelt = false
 	if "type" in toTransport and toTransport.type == BuildingTypes.Type.BELT:
-		is_target_belt = true
+		isTargetBelt = true
 
-	if is_target_belt:
+	if isTargetBelt:
 		if "canInput" in toTransport and not toTransport.canInput:
 			return
 	else:
 		if "buildingResource" in toTransport and toTransport.buildingResource:
-			var max_input = toTransport.buildingResource.maxInput
-			if toTransportInventory.inputInventory.size() >= max_input:
+			var maxInput = toTransport.buildingResource.maxInput
+			if toTransportInventory.inputInventory.size() >= maxInput:
 				return
 
 	# Transfer the first output item to the target inventory
@@ -58,3 +58,7 @@ func transport_to():
 		var item = inventoryComponent.outputInventory[0]
 		toTransportInventory.inputInventory.append(item)
 		inventoryComponent.outputInventory.erase(item)
+
+func receive(item: Item, cell: Vector2i, dir: bool):
+	pass
+	#var validIntakeCell = 

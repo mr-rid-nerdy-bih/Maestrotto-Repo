@@ -2,9 +2,10 @@ class_name BuildingResource
 extends Resource
 
 @export_group("Identity")
-@export var building_name: String
-@export var building_type: BuildingTypes.Type
+@export var buildingName: String
+@export var buildingType: BuildingTypes.Type
 
+@export_group("Visual")
 @export var texture: Texture
 @export var isAnimated: bool
 @export var hframes: int = 1
@@ -14,10 +15,11 @@ extends Resource
 @export_group("Inventory Settings")
 @export var maxInput: int = 10
 @export var maxOutput: int = 10
+@export var inputCells: Array[Vector2i] = [Vector2i(0, 0)]
+@export var outputCells: Array[Vector2i] = [Vector2i(0, 0)]
 
 @export_group("Transport Settings")
 @export var validOutputBuildings: Array[BuildingTypes.Type] = []
-@export var canUseBelt: bool = false
 @export var passThroughInput: bool = false
 
 @export_group("Can Generate")
@@ -27,5 +29,15 @@ extends Resource
 @export var needsInput: bool = false
 @export var cooldown: float
 
-func customBehavior(building: Building) -> void:
-	pass
+@export_group("Custom Behavior")
+@export var customBehavior: Script
+@export var customBehaviorUsesProcess: bool = false
+
+func custom_behavior(building: Building) -> void:
+	var instance = building.behaviorInstance
+	if not instance and customBehavior:
+		instance = customBehavior.new()
+		building.behaviorInstance = instance
+	
+	if instance and instance.has_method("custom_behavior"):
+		instance.custom_behavior(building)

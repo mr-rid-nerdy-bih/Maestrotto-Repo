@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" uid="uid://b2ta3sr8wbyg1" path="res://classes/building.gd" id="1_j1o05"]
 [ext_resource type="Script" uid="uid://c8dtwrm55fflr" path="res://objects/components/generate_item_component.gd" id="2_7pv8s"]
-[ext_resource type="Script" uid="uid://cpxvtu6cs2fuq" path="res://itemResource.gd" id="2_8hf61"]
-[ext_resource type="Script" uid="uid://clfio2dyahcm3" path="res://buildingResource.gd" id="3_okp8j"]
+[ext_resource type="Script" uid="uid://cpxvtu6cs2fuq" path="res://helpers/item_resource.gd" id="2_8hf61"]
+[ext_resource type="Script" uid="uid://clfio2dyahcm3" path="res://helpers/building_resource.gd" id="3_okp8j"]
 [ext_resource type="Script" uid="uid://2ddanjtimqfw" path="res://objects/components/transport_component.gd" id="3_xm13r"]
 [ext_resource type="Script" uid="uid://c3rlmc2fuumsj" path="res://objects/components/inventory_component.gd" id="4_8hf61"]
 [ext_resource type="Texture2D" uid="uid://c5dh248tp7ndc" path="res://assets/drill.png" id="4_k0g70"]

@@ -3,7 +3,7 @@ extends Node2D
 var cycleNum = 0
 var isBelting = false
 var dir: bool = false
-var enum_values = BuildingTypes.Type.values()
+var enumValues = BuildingTypes.Type.values()
 
 @onready var beltGroup: Node2D = $Belt
 @onready var machinesGroup: Node2D = $Machines
@@ -11,7 +11,8 @@ var enum_values = BuildingTypes.Type.values()
 func _ready() -> void:
 	beltGroup.top_level = true
 	z_index = 41
-	changePreview(0, true)
+	
+	changePreview(null, true)
 
 func _process(delta: float) -> void:
 	visible = InputManager.currentMode == 1
@@ -31,15 +32,15 @@ func changePreview(event, skipEventCheck) -> void:
 		if event.is_action_pressed("flip"):
 			dir = !dir
 		if event.is_action_pressed("cycleUp"):
-			cycleNum = (cycleNum - 1) % enum_values.size()
+			cycleNum = (cycleNum - 1) % enumValues.size()
 		if event.is_action_pressed("cycleDown"):
-			cycleNum = (cycleNum + 1) % enum_values.size()
+			cycleNum = (cycleNum + 1) % enumValues.size()
 	
-	var convertedType: BuildingTypes.Type = enum_values[cycleNum]
+	var convertedType: BuildingTypes.Type = enumValues[cycleNum]
 
 	while convertedType == BuildingTypes.Type.NONE or convertedType == BuildingTypes.Type.BELT:
-		cycleNum = (cycleNum + 1) % enum_values.size()
-		convertedType = enum_values[cycleNum]
+		cycleNum = (cycleNum + 1) % enumValues.size()
+		convertedType = enumValues[cycleNum]
 
 	var currentBuilding: Building = GridManager.get_new_building(convertedType)
 
@@ -55,23 +56,20 @@ func changePreview(event, skipEventCheck) -> void:
 
 func getCurrentBuilding():
 	var building = {}
-	building.class = enum_values[cycleNum]
-	building.dir = machinesGroup.get_child(0).visualComponent.dir
+	building.class = enumValues[cycleNum]
+	building.dir = dir
 	return building
 
 func belt(cells, sets: bool) -> void:
 	isBelting = sets
 	
-	# Clear old belt previews
 	for i in beltGroup.get_children():
 		i.queue_free()
 		
 	if isBelting and cells:
-		# Depending on whether 'cells' is an array of arrays or a dictionary structure,
-		# ensure we target the correct entry list. If cells is an Array, use cells[0] safely:
-		var cell_list = cells[0] if (cells is Array and cells.size() > 0) else cells
+		var cellList = cells[0] if (cells is Array and cells.size() > 0) else cells
 		
-		for i in cell_list:
+		for i in cellList:
 			var c = i[0]
 			var beltDir = i[1]
 			var beltPreview = GridManager.beltScene.instantiate()

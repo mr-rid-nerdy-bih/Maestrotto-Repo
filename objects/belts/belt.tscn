@@ -1,18 +1,41 @@
 [gd_scene format=3 uid="uid://dccu7jyorgrny"]
 
 [ext_resource type="Script" uid="uid://b764r7qmqb13j" path="res://objects/belts/belt.gd" id="1_nnvwe"]
+[ext_resource type="Script" uid="uid://cpxvtu6cs2fuq" path="res://helpers/item_resource.gd" id="2_1yu2f"]
 [ext_resource type="Script" uid="uid://c3rlmc2fuumsj" path="res://objects/components/inventory_component.gd" id="2_l8d1h"]
 [ext_resource type="Script" uid="uid://2ddanjtimqfw" path="res://objects/components/transport_component.gd" id="3_3uai4"]
+[ext_resource type="Script" uid="uid://clfio2dyahcm3" path="res://helpers/building_resource.gd" id="3_d5ujk"]
+[ext_resource type="Script" uid="uid://bl7k5mv2g72jt" path="res://objects/components/linking_component.gd" id="6_gnr3f"]
+[ext_resource type="Script" uid="uid://bsyar25g6weee" path="res://objects/components/visual_component.gd" id="7_d5ujk"]
 
-[node name="Belt" type="Line2D" unique_id=1741882474 node_paths=PackedStringArray("transportComponent", "inventoryComponent")]
-width = 0.0
+[sub_resource type="Resource" id="Resource_3uai4"]
+script = ExtResource("3_d5ujk")
+validOutputBuildings = Array[int]([4])
+metadata/_custom_type_script = "uid://clfio2dyahcm3"
+
+[node name="Belt" type="Node2D" unique_id=1965592939 node_paths=PackedStringArray("line2D", "transportComponent", "inventoryComponent", "linkingComponent", "visualComponent")]
 script = ExtResource("1_nnvwe")
+line2D = NodePath("Line2D")
+buildingResource = SubResource("Resource_3uai4")
 transportComponent = NodePath("TransportComponent")
 inventoryComponent = NodePath("InventoryComponent")
+linkingComponent = NodePath("LinkingComponent")
+visualComponent = NodePath("VisualComponent")
 
-[node name="InventoryComponent" type="Node2D" parent="." unique_id=1825967995]
-script = ExtResource("2_l8d1h")
-
-[node name="TransportComponent" type="Node2D" parent="." unique_id=816156823 node_paths=PackedStringArray("inventoryComponent")]
+[node name="TransportComponent" type="Node2D" parent="." unique_id=1135943145 node_paths=PackedStringArray("inventoryComponent")]
 script = ExtResource("3_3uai4")
 inventoryComponent = NodePath("../InventoryComponent")
+
+[node name="InventoryComponent" type="Node2D" parent="." unique_id=1796065696]
+script = ExtResource("2_l8d1h")
+
+[node name="LinkingComponent" type="Node2D" parent="." unique_id=20253507 node_paths=PackedStringArray("visualComponent", "transportComponent")]
+script = ExtResource("6_gnr3f")
+visualComponent = NodePath("../VisualComponent")
+transportComponent = NodePath("../TransportComponent")
+
+[node name="Line2D" type="Line2D" parent="." unique_id=1746082388]
+width = 0.0
+
+[node name="VisualComponent" type="Node2D" parent="." unique_id=78794779]
+script = ExtResource("7_d5ujk")

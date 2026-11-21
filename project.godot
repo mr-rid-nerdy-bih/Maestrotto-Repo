@@ -26,6 +26,10 @@ TimeGlobal="*uid://ms1fkqo1v7rs"
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/project-time-tracker/plugin.cfg", "res://addons/project_statistics/plugin.cfg")
+
 [input]
 
 link={
