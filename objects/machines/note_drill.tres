@@ -1,21 +1,20 @@
 [gd_resource type="Resource" script_class="BuildingResource" format=3 uid="uid://cyc2bdaxjpv6m"]
 
-[ext_resource type="Script" uid="uid://cpxvtu6cs2fuq" path="res://helpers/item_resource.gd" id="1_oe23f"]
+[ext_resource type="Script" uid="uid://bkwei1vxbbh7m" path="res://helpers/recipe_resource.gd" id="2_4fpfv"]
 [ext_resource type="Resource" uid="uid://3qirvryow3up" path="res://objects/items/note.tres" id="2_c02i5"]
 [ext_resource type="Script" uid="uid://clfio2dyahcm3" path="res://helpers/building_resource.gd" id="2_rijym"]
 [ext_resource type="Texture2D" uid="uid://c5dh248tp7ndc" path="res://assets/drill.png" id="4_4fpfv"]
 
 [resource]
 script = ExtResource("2_rijym")
-building_name = "Note Drill"
-building_type = 1
+buildingName = "Note Drill"
+buildingType = 1
 texture = ExtResource("4_4fpfv")
 isAnimated = true
 hframes = 6
 offset = Vector2(0, -6)
-frameTime = 5.0
+frameTime = 3.0
 validOutputBuildings = Array[int]([2])
 canGenerate = true
 item = ExtResource("2_c02i5")
-cooldown = 40.0
 metadata/_custom_type_script = "uid://clfio2dyahcm3"

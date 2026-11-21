@@ -6,8 +6,8 @@
 
 [resource]
 script = ExtResource("2_okspr")
-building_name = "Chute"
-building_type = 4
+buildingName = "Chute"
+buildingType = 4
 texture = ExtResource("3_okspr")
 offset = Vector2(2, -1)
 validOutputBuildings = Array[int]([5])

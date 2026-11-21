@@ -11,23 +11,13 @@ extends Node2D
 
 var tickBirth: int
 var isActive: bool = true
-var type
-
-var inputCells: Array[Vector2i]
-var outputCells: Array[Vector2i]
+var type: BuildingTypes.Type
 
 var behaviorInstance
 
 func _process(delta: float) -> void:
 	if visualComponent:
 		visualComponent.preview_loop()
-	
-	if buildingResource:
-		type = buildingResource.buildingType
-		if buildingResource.customBehavior:
-			behaviorInstance = buildingResource.customBehavior.new()
-			if behaviorInstance and "building" in behaviorInstance:
-				behaviorInstance.building = self
 
 func _ready() -> void:
 	if visualComponent:
@@ -38,8 +28,14 @@ func _ready() -> void:
 	
 	if buildingResource:
 		type = buildingResource.buildingType
-		inputCells = buildingResource.inputCells
-		outputCells = buildingResource.outputCells
+		if buildingResource.customBehavior:
+			behaviorInstance = buildingResource.customBehavior.new()
+			if behaviorInstance and "building" in behaviorInstance:
+				behaviorInstance.building = self
+	
+	for i in get_children():
+		if "buildingResource" in i:
+			i.buildingResource = buildingResource
 	
 	TimeGlobal.ticked.connect(_on_tick)
 
@@ -56,3 +52,7 @@ func _on_tick() -> void:
 	
 	if not buildingResource.customBehaviorUsesProcess:
 		buildingResource.custom_behavior(self)
+
+func link_to_building(building: Building) -> void:
+	transportComponent.toTransport = building
+	linkingComponent.setLinkAtLinkGroup()

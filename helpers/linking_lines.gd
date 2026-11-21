@@ -1,19 +1,19 @@
 extends Node2D
 
-var links = {}
-var linkLines = {}
+var links :=  {}
+var linkLines :=  {}
 
 func _process(_delta: float) -> void:
-	var halfCell = Vector2(GridManager.CELL_SIZE, GridManager.CELL_SIZE) / 2.0
+	var halfCell := Vector2(GridManager.CELL_SIZE, GridManager.CELL_SIZE) / 2.0
 	
 	for cell in links:
 		var cell1: Vector2i = links[cell]["to"]
-		var fromPos = GridManager.get_global_at(cell) + halfCell
-		var toPos = GridManager.get_global_at(cell1) + halfCell
+		var fromPos := GridManager.get_global_at(cell) + halfCell
+		var toPos := GridManager.get_global_at(cell1) + halfCell
 		var type: BuildingTypes.Type = links[cell]["endBuildingType"]
 		
 		if not linkLines.has(cell):
-			var line = Line2D.new()
+			var line := Line2D.new()
 			line.width = 2.0
 			
 			line.default_color = Color.RED
@@ -44,6 +44,5 @@ func _process(_delta: float) -> void:
 		fromBuilding = GridManager.get_building_at(cell)
 		toBuilding = GridManager.get_building_at(cell1)
 		
-		print(fromBuilding,",",toBuilding)
 		if not (fromBuilding and toBuilding):
 			links.erase(cell)

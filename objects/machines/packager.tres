@@ -6,10 +6,10 @@
 
 [resource]
 script = ExtResource("2_cqdh8")
-building_name = "Packager"
-building_type = 2
+buildingName = "Packager"
+buildingType = 2
 texture = ExtResource("3_cqdh8")
 offset = Vector2(2, -1)
-canUseBelt = true
+validOutputBuildings = Array[int]([3])
 passThroughInput = true
 metadata/_custom_type_script = "uid://clfio2dyahcm3"

@@ -1,27 +1,34 @@
 class_name GenerateItemComponent
 extends Node2D
 
-@onready var buildingResource: BuildingResource = get_parent().buildingResource
 @onready var itemScene: PackedScene = preload("uid://cydebobvt4np8")
 
 @export var inventoryComponent: InventoryComponent
-var currentCooldown = 0
+var buildingResource: BuildingResource
 
-func generate():
+var generateThis: Array[ItemResource]
+var currentCooldown: float = 0
+
+func generate() -> void:
 	if !buildingResource.canGenerate:
 		return
 	
-	var inactive: bool = false
 	if currentCooldown < buildingResource.cooldown:
 		currentCooldown += 1
 	else:
 		if inventoryComponent.outputInventory.size() < buildingResource.maxOutput:
-			var newItem: Item = itemScene.instantiate()
-			newItem.itemResource = buildingResource.item
-			inventoryComponent.outputInventory.append(newItem)
-			print("yesboi")
+			var newItems: Array = makeItem(generateThis)
+			
+			for newItem: Item in newItems:
+				inventoryComponent.outputInventory.append(newItem)
 			
 			currentCooldown = 0
-		else:
-			inactive = true
-	return inactive
+
+func makeItem(items: Array) -> Array:
+	var returnItems: Array = []
+	for i: ItemResource in items:
+		var newItem: Item = itemScene.instantiate()
+		newItem.itemResource = buildingResource.item
+		returnItems.append(newItem)
+	
+	return returnItems

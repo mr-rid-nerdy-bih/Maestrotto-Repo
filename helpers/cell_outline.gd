@@ -26,14 +26,14 @@ func _process(_delta: float) -> void:
 			3: line.default_color = Color.ORANGE
 	
 	# Get current cell and compute world bounds
-	var worldMousePos = GridManager.cam.get_global_mouse_position()
-	var cell = GridManager.get_coords_at(worldMousePos)
-	var size = float(GridManager.CELL_SIZE)
+	var worldMousePos := GridManager.cam.get_global_mouse_position()
+	var cell := GridManager.get_coords_at(worldMousePos)
+	var size := float(GridManager.CELL_SIZE)
 	
-	var p0 = Vector2(cell) * size # Top-Left
-	var p1 = p0 + Vector2(size, 0.0) # Top-Right
-	var p2 = p0 + Vector2(0.0, size) # Bottom-Left
-	var p3 = p0 + Vector2(size, size) # Bottom-Right
+	var p0 := Vector2(cell) * size # Top-Left
+	var p1 := p0 + Vector2(size, 0.0) # Top-Right
+	var p2 := p0 + Vector2(0.0, size) # Bottom-Left
+	var p3 := p0 + Vector2(size, size) # Bottom-Right
 	
 	# Assign points to the 4 lines
 	top.clear_points()

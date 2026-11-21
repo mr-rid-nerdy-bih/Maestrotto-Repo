@@ -1,9 +1,9 @@
 extends Node2D
 
-var cycleNum = 0
-var isBelting = false
+var cycleNum := 0
+var isBelting := false
 var dir: bool = false
-var enumValues = BuildingTypes.Type.values()
+var enumValues := BuildingTypes.Type.values()
 
 @onready var beltGroup: Node2D = $Belt
 @onready var machinesGroup: Node2D = $Machines
@@ -17,7 +17,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	visible = InputManager.currentMode == 1
 	
-	var pos = GridManager.get_coords_at(GridManager.cam.get_global_mouse_position())
+	var pos := GridManager.get_coords_at(GridManager.cam.get_global_mouse_position())
 	global_position = pos * GridManager.CELL_SIZE
 	
 	if isBelting:
@@ -41,7 +41,7 @@ func changePreview(event, skipEventCheck) -> void:
 	while convertedType == BuildingTypes.Type.NONE or convertedType == BuildingTypes.Type.BELT:
 		cycleNum = (cycleNum + 1) % enumValues.size()
 		convertedType = enumValues[cycleNum]
-
+	
 	var currentBuilding: Building = GridManager.get_new_building(convertedType)
 
 	# Safety check just in case
@@ -55,8 +55,8 @@ func changePreview(event, skipEventCheck) -> void:
 		currentBuilding.position = Vector2.ZERO
 
 func getCurrentBuilding():
-	var building = {}
-	building.class = enumValues[cycleNum]
+	var building :=  {}
+	building.type = enumValues[cycleNum]
 	building.dir = dir
 	return building
 
@@ -67,12 +67,12 @@ func belt(cells, sets: bool) -> void:
 		i.queue_free()
 		
 	if isBelting and cells:
-		var cellList = cells[0] if (cells is Array and cells.size() > 0) else cells
+		var cellList := cells[0] if (cells is Array and cells.size() > 0) else cells
 		
 		for i in cellList:
-			var c = i[0]
-			var beltDir = i[1]
-			var beltPreview = GridManager.beltScene.instantiate()
+			var c := i[0]
+			var beltDir := i[1]
+			var beltPreview := GridManager.beltScene.instantiate()
 			beltPreview.isPreview = true
 			beltPreview.global_position = Vector2(c) * GridManager.CELL_SIZE
 			beltPreview.rotation_degrees = beltDir

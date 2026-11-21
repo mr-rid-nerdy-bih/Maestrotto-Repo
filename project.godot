@@ -21,6 +21,10 @@ GridManager="*uid://dj6n8kb5whsho"
 InputManager="*uid://bx74khh84oefn"
 TimeGlobal="*uid://ms1fkqo1v7rs"
 
+[debug]
+
+gdscript/warnings/untyped_declaration=1
+
 [display]
 
 window/stretch/mode="canvas_items"

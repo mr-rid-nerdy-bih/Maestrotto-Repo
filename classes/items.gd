@@ -6,8 +6,8 @@ extends Node2D
 var sprite: Sprite2D = Sprite2D.new()
 var texture: Texture
 
-var currentLerp = 0
-var canOutput = false
+var currentLerp: float = 0
+var canOutput := false
 
 func _ready() -> void:
 	texture = preload("uid://bgvgptnotkii0")

@@ -15,8 +15,8 @@ extends Resource
 @export_group("Inventory Settings")
 @export var maxInput: int = 10
 @export var maxOutput: int = 10
-@export var inputCells: Array[Vector2i] = [Vector2i(0, 0)]
-@export var outputCells: Array[Vector2i] = [Vector2i(0, 0)]
+@export var inputCells: Array[Dictionary]
+@export var outputCells: Array[Dictionary]
 
 @export_group("Transport Settings")
 @export var validOutputBuildings: Array[BuildingTypes.Type] = []
@@ -25,9 +25,10 @@ extends Resource
 @export_group("Can Generate")
 @export_custom(PROPERTY_HINT_GROUP_ENABLE, "") var canGenerate: bool = false
 @export var item: ItemResource
-@export var inputItems: Array[ItemResource]
-@export var needsInput: bool = false
 @export var cooldown: float
+@export_subgroup("Recipes")
+@export_custom(PROPERTY_HINT_GROUP_ENABLE, "") var hasRecipes: bool = false
+@export var itemRecipes: Array[RecipeResource]
 
 @export_group("Custom Behavior")
 @export var customBehavior: Script
