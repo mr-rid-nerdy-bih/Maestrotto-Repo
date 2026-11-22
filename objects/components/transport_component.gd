@@ -8,99 +8,81 @@ var buildingResource: BuildingResource
 var toTransport: Building
 
 func transport_to() -> void:
-	if !toTransport or not is_instance_valid(toTransport):
+	if not is_instance_valid(toTransport):
 		toTransport = null
-		return
-	
-	var input := inventoryComponent.inputInventory
-	var output := inventoryComponent.outputInventory
-	
-	if buildingResource.passThroughInput:
-		while input.size() > 0 and output.size() < buildingResource.maxOutput:
-			var item: Item = input[0]
-			input.erase(item)
-			output.append(item)
-	
-	var toTransportInventory: InventoryComponent = toTransport.inventoryComponent
-	var isBelt: bool = toTransport.type == BuildingTypes.Type.BELT
-	
-	if !toTransportInventory:
-		return
-	if toTransportInventory.inputInventory.size() >= toTransport.buildingResource.maxInput:
-		return
-	
-	if output.size() > 0:
-		if isBelt and !toTransport.canInput: return
-		
-		var item: Item = output[0]
-		toTransportInventory.inputInventory.append(item)
-		output.erase(item)
-
-func trans_to(outCell, ) -> void:
-	if !toTransport or not is_instance_valid(toTransport):
-		toTransport = null
+		print("is that so packager :", buildingResource.buildingType)
 		return
 	
 	if buildingResource.passThroughInput:
-		for i in inventoryComponent.inputCells:
-			if i.inventory.size() < 1: continue
-			var item: Item = i.inventory[0]
-			
-			var accepted: bool = move_into_inventory(item, true)
-			if accepted:
-				i.inventory.erase(item)
+		for in_slot: Dictionary in inventoryComponent.inputCells:
+			var in_inv: Array = in_slot.get("inventory", [])
+			while in_inv.size() > 0:
+				var item: Item = in_inv[0]
+				if not is_instance_valid(item):
+					in_inv.remove_at(0)
+					continue
+				if move_into_inventory(item, true):
+					in_inv.remove_at(0)
+				else:
+					break
 	
 	var isBelt: bool = toTransport.type == BuildingTypes.Type.BELT
+	if isBelt and "canInput" in toTransport and not toTransport.canInput:
+		return
 	
-	
+	for out_slot: Dictionary in inventoryComponent.outputCells:
+		var out_inv: Array = out_slot.get("inventory", [])
+		for i in range(out_inv.size() - 1, -1, -1):
+			var item: Item = out_inv[i]
+			if not is_instance_valid(item):
+				out_inv.remove_at(i)
+				continue
+			print("reached")
+			if toTransport.transportComponent.receive(item, visualComponent.cell, visualComponent.dir):
+				out_inv.remove_at(i)
 
 func receive(item: Item, cell: Vector2i, dir: Vector2) -> bool:
-	var selfDir: Vector2 = visualComponent.dir
+	if not is_instance_valid(item) or visualComponent == null or inventoryComponent == null:
+		return false
+	
 	var selfCell: Vector2i = visualComponent.cell
+	var selfDir: Vector2 = visualComponent.dir
+	if cell.distance_to(selfCell) > 1.0:
+		return false
+	if dir != selfDir:
+		return false
 	
-	for i: Dictionary in inventoryComponent.inputCells:
-		if i.inventory.size() >= buildingResource.maxInput:
-			continue
-		
-		if cell.distance_to(selfCell) > 1:
-			continue
-		
-		if dir != selfDir:
-			continue
-		
-		move_into_inventory(item)
-	
-	return false
+	var accepted: bool = move_into_inventory(item, false)
+	return accepted
 
 func move_into_inventory(item: Item, output: bool = false) -> bool:
-	if output:
-		@warning_ignore("untyped_declaration")
-		for i in inventoryComponent.outputCells:
-			if i.inventory.size() >= buildingResource.maxInput:
-				print("ItemSlot at ", visualComponent.cell, " filled. Move attempt failed")
-				return false
-			
-			if i.item.any:
-				i.inventory.append(item)
-				i.item = item.itemResource
-				return true
-			
-			if i.item.itemName != item.itemResource.itemName:
-				i.inventory.append(item)
-				return true
-			return false
-	@warning_ignore("untyped_declaration")
-	for i in inventoryComponent.inputCells:
-		if i.inventory.size() >= buildingResource.maxInput:
-			print("ItemSlot at ", visualComponent.cell, " filled. Move attempt failed")
-			return false
+	if not is_instance_valid(item) or inventoryComponent == null or buildingResource == null:
+		return false
+	
+	var target_cells: Array = inventoryComponent.outputCells if output else inventoryComponent.inputCells
+	var max_cap: int = buildingResource.maxOutput if output else buildingResource.maxInput
+	
+	for slot: Dictionary in target_cells:
+		if slot == null:
+			continue
+		var slot_inv: Array = slot.get("inventory", [])
+		if slot_inv.size() >= max_cap:
+			continue
 		
-		if i.item.any:
-			i.inventory.append(item)
-			i.item = item.itemResource
-			return true
+		var expected_item: ItemResource = slot.get("item", null)
+		var is_wildcard := expected_item == null or expected_item.any == "Any"
+		var matches_item := item.itemResource == expected_item
 		
-		if i.item.itemName != item.itemResource.itemName:
-			i.inventory.append(item)
+		if is_wildcard or matches_item:
+			print("here")
+			slot_inv.append(item)
+			print(slot_inv)
 			return true
+	
+	# Fallback to flat list if no matching slot accepted it
+	var fallback_list: Array = inventoryComponent.outputInventory if output else inventoryComponent.inputInventory
+	if fallback_list.size() < max_cap:
+		fallback_list.append(item)
+		return true
+	
 	return false

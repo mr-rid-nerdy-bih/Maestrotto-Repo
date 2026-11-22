@@ -1,8 +1,20 @@
 [gd_resource type="Resource" script_class="BuildingResource" format=3 uid="uid://b8xrp1vpm6rrh"]
 
 [ext_resource type="Script" uid="uid://bkwei1vxbbh7m" path="res://helpers/recipe_resource.gd" id="1_cqdh8"]
+[ext_resource type="Script" uid="uid://cvbvt8vilk5ip" path="res://helpers/input_slot.gd" id="1_p5scp"]
 [ext_resource type="Script" uid="uid://clfio2dyahcm3" path="res://helpers/building_resource.gd" id="2_cqdh8"]
+[ext_resource type="Resource" uid="uid://1kicmbbvhbi" path="res://objects/items/any.tres" id="2_o82ow"]
 [ext_resource type="Texture2D" uid="uid://dw5f57nnrb1gk" path="res://assets/packager.png" id="3_cqdh8"]
+
+[sub_resource type="Resource" id="Resource_o82ow"]
+script = ExtResource("1_p5scp")
+item = ExtResource("2_o82ow")
+metadata/_custom_type_script = "uid://cvbvt8vilk5ip"
+
+[sub_resource type="Resource" id="Resource_857ue"]
+script = ExtResource("1_p5scp")
+item = ExtResource("2_o82ow")
+metadata/_custom_type_script = "uid://cvbvt8vilk5ip"
 
 [resource]
 script = ExtResource("2_cqdh8")
@@ -10,6 +22,8 @@ buildingName = "Packager"
 buildingType = 2
 texture = ExtResource("3_cqdh8")
 fourDirections = true
+inputCells = Array[ExtResource("1_p5scp")]([SubResource("Resource_o82ow")])
+outputCells = Array[ExtResource("1_p5scp")]([SubResource("Resource_857ue")])
 validOutputBuildings = Array[int]([3])
 passThroughInput = true
 metadata/_custom_type_script = "uid://clfio2dyahcm3"

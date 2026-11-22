@@ -39,7 +39,9 @@ func _ready() -> void:
 				behaviorInstance.building = self
 	
 	if inventoryComponent:
+		print(inventoryComponent.inputCells)
 		inventoryComponent.ready_input_cells()
+		print(inventoryComponent.inputCells)
 	if craftComponent:
 		craftComponent.check_crafts()
 	

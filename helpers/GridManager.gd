@@ -61,7 +61,7 @@ func get_building_at(cell: Vector2i) -> Building:
 	return null
 
 func get_belt_at(cell: Vector2i) -> Building:
-	for obj: Building in grid.values():
+	for obj in grid.values():
 		if not is_instance_valid(obj) or !(obj.type and obj.type == BuildingTypes.Type.BELT):
 			continue
 		for entry: Dictionary in obj.belts:
@@ -142,6 +142,7 @@ func place_belt_at(cell: Vector2i, cell1: Vector2i) -> void:
 		newBelt.cell1 = cell1
 	if "buildingResource" in newBelt and buildingResources.has(BuildingTypes.Type.BELT):
 		newBelt.buildingResource = buildingResources[BuildingTypes.Type.BELT]
+	newBelt.add_slots()
 	
 	game.add_child(newBelt)
 	grid[cell] = newBelt

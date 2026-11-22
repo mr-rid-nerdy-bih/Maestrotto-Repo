@@ -103,6 +103,7 @@ func draw_on_grid() -> void:
 func child_items() -> void:
 	if not inventoryComponent or not line2D or line2D.get_point_count() < 2:
 		return
+	if inventoryComponent.inputCells.size() == 0: add_slots()
 	for item: Item in inventoryComponent.inputCells[0].inventory:
 		if is_instance_valid(item) and item.get_parent() == null:
 			item.global_position = line2D.get_point_position(0)
@@ -152,6 +153,10 @@ func _process(delta: float) -> void:
 					currentItem.get_parent().remove_child(currentItem)
 				
 				currentItem.currentLerp = 0
-				inventoryComponent.outputInventory.append(currentItem)
-				inventoryComponent.inputInventory.remove_at(i)
+				inventoryComponent.outputCells[0].outputInventory.append(currentItem)
+				inventoryComponent.inputCells[0].inputInventory.remove_at(i)
 				transportComponent.transport_to()
+
+func add_slots() -> void:
+	inventoryComponent.add_input_cell(Vector2i(0, 0), anyItemResource)
+	inventoryComponent.add_output_cell(cell1 - cell, anyItemResource)
