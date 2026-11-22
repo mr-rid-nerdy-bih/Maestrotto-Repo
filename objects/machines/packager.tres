@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="BuildingResource" format=3 uid="uid://b8xrp1vpm6rrh"]
 
-[ext_resource type="Script" uid="uid://cpxvtu6cs2fuq" path="res://helpers/item_resource.gd" id="1_khs8d"]
+[ext_resource type="Script" uid="uid://bkwei1vxbbh7m" path="res://helpers/recipe_resource.gd" id="1_cqdh8"]
 [ext_resource type="Script" uid="uid://clfio2dyahcm3" path="res://helpers/building_resource.gd" id="2_cqdh8"]
 [ext_resource type="Texture2D" uid="uid://dw5f57nnrb1gk" path="res://assets/packager.png" id="3_cqdh8"]
 
@@ -9,7 +9,7 @@ script = ExtResource("2_cqdh8")
 buildingName = "Packager"
 buildingType = 2
 texture = ExtResource("3_cqdh8")
-offset = Vector2(2, -1)
+fourDirections = true
 validOutputBuildings = Array[int]([3])
 passThroughInput = true
 metadata/_custom_type_script = "uid://clfio2dyahcm3"

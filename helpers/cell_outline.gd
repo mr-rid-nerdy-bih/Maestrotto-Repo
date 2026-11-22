@@ -19,14 +19,14 @@ func _process(_delta: float) -> void:
 	
 	visible = true
 	
-	for line in [top, bottom, left, right]:
+	for line: Line2D in [top, bottom, left, right]:
 		match InputManager.currentMode:
 			1: line.default_color = Color.GREEN
 			2: line.default_color = Color.RED
 			3: line.default_color = Color.ORANGE
 	
 	# Get current cell and compute world bounds
-	var worldMousePos := GridManager.cam.get_global_mouse_position()
+	var worldMousePos: Vector2 = GridManager.cam.get_global_mouse_position()
 	var cell := GridManager.get_coords_at(worldMousePos)
 	var size := float(GridManager.CELL_SIZE)
 	

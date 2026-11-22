@@ -1,20 +1,44 @@
 [gd_resource type="Resource" script_class="BuildingResource" format=3 uid="uid://cyc2bdaxjpv6m"]
 
+[ext_resource type="Script" uid="uid://cvbvt8vilk5ip" path="res://helpers/input_slot.gd" id="1_c02i5"]
 [ext_resource type="Script" uid="uid://bkwei1vxbbh7m" path="res://helpers/recipe_resource.gd" id="2_4fpfv"]
 [ext_resource type="Resource" uid="uid://3qirvryow3up" path="res://objects/items/note.tres" id="2_c02i5"]
 [ext_resource type="Script" uid="uid://clfio2dyahcm3" path="res://helpers/building_resource.gd" id="2_rijym"]
-[ext_resource type="Texture2D" uid="uid://c5dh248tp7ndc" path="res://assets/drill.png" id="4_4fpfv"]
+[ext_resource type="Script" uid="uid://cpxvtu6cs2fuq" path="res://helpers/item_resource.gd" id="3_vwuwq"]
+[ext_resource type="Resource" uid="uid://1kicmbbvhbi" path="res://objects/items/any.tres" id="5_sq7yl"]
+
+[sub_resource type="Resource" id="Resource_k0g70"]
+script = ExtResource("1_c02i5")
+item = ExtResource("2_c02i5")
+metadata/_custom_type_script = "uid://cvbvt8vilk5ip"
+
+[sub_resource type="Resource" id="Resource_c02i5"]
+script = ExtResource("2_4fpfv")
+requiredItems = Array[ExtResource("3_vwuwq")]([ExtResource("5_sq7yl")])
+outputItems = Array[ExtResource("3_vwuwq")]([ExtResource("2_c02i5")])
+metadata/_custom_type_script = "uid://bkwei1vxbbh7m"
+
+[sub_resource type="Resource" id="Resource_vwuwq"]
+script = ExtResource("1_c02i5")
+item = ExtResource("2_c02i5")
+metadata/_custom_type_script = "uid://cvbvt8vilk5ip"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_rijym"]
+load_path = "res://.godot/imported/drill.png-26abb140102bb22fa946bf1a45c8ff41.ctex"
 
 [resource]
 script = ExtResource("2_rijym")
 buildingName = "Note Drill"
 buildingType = 1
-texture = ExtResource("4_4fpfv")
+texture = SubResource("CompressedTexture2D_rijym")
 isAnimated = true
 hframes = 6
-offset = Vector2(0, -6)
+offset = Vector2(0, -8)
 frameTime = 3.0
+inputCells = Array[ExtResource("1_c02i5")]([SubResource("Resource_k0g70")])
+outputCells = Array[ExtResource("1_c02i5")]([SubResource("Resource_vwuwq")])
 validOutputBuildings = Array[int]([2])
 canGenerate = true
-item = ExtResource("2_c02i5")
+cooldown = 40.0
+itemRecipes = Array[ExtResource("2_4fpfv")]([SubResource("Resource_c02i5")])
 metadata/_custom_type_script = "uid://clfio2dyahcm3"

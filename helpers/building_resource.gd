@@ -9,14 +9,16 @@ extends Resource
 @export var texture: Texture
 @export var isAnimated: bool
 @export var hframes: int = 1
-@export var offset: Vector2
+@export var offset: Vector2 = Vector2.ZERO
 @export var frameTime: float
+@export_subgroup("Four Directions")
+@export_custom(PROPERTY_HINT_GROUP_ENABLE, "") var fourDirections: bool = false
 
 @export_group("Inventory Settings")
 @export var maxInput: int = 10
 @export var maxOutput: int = 10
-@export var inputCells: Array[Dictionary]
-@export var outputCells: Array[Dictionary]
+@export var inputCells: Array[ItemSlot]
+@export var outputCells: Array[ItemSlot]
 
 @export_group("Transport Settings")
 @export var validOutputBuildings: Array[BuildingTypes.Type] = []
@@ -24,10 +26,8 @@ extends Resource
 
 @export_group("Can Generate")
 @export_custom(PROPERTY_HINT_GROUP_ENABLE, "") var canGenerate: bool = false
-@export var item: ItemResource
 @export var cooldown: float
 @export_subgroup("Recipes")
-@export_custom(PROPERTY_HINT_GROUP_ENABLE, "") var hasRecipes: bool = false
 @export var itemRecipes: Array[RecipeResource]
 
 @export_group("Custom Behavior")

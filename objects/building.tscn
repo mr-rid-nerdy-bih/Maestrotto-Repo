@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b2ta3sr8wbyg1" path="res://classes/building.gd" id="1_j1o05"]
 [ext_resource type="Script" uid="uid://c8dtwrm55fflr" path="res://objects/components/generate_item_component.gd" id="2_7pv8s"]
+[ext_resource type="Script" uid="uid://cvbvt8vilk5ip" path="res://helpers/input_slot.gd" id="2_k0g70"]
 [ext_resource type="Script" uid="uid://bkwei1vxbbh7m" path="res://helpers/recipe_resource.gd" id="2_okp8j"]
 [ext_resource type="Script" uid="uid://clfio2dyahcm3" path="res://helpers/building_resource.gd" id="3_okp8j"]
 [ext_resource type="Script" uid="uid://2ddanjtimqfw" path="res://objects/components/transport_component.gd" id="3_xm13r"]
@@ -28,9 +29,11 @@ inventoryComponent = NodePath("InventoryComponent")
 linkingComponent = NodePath("LinkingComponent")
 visualComponent = NodePath("VisualComponent")
 
-[node name="GenerateItemComponent" type="Node2D" parent="." unique_id=198131380 node_paths=PackedStringArray("inventoryComponent")]
+[node name="GenerateItemComponent" type="Node2D" parent="." unique_id=198131380 node_paths=PackedStringArray("inventoryComponent", "transportComponent", "craftComponent")]
 script = ExtResource("2_7pv8s")
 inventoryComponent = NodePath("../InventoryComponent")
+transportComponent = NodePath("../TransportComponent")
+craftComponent = NodePath("../CraftComponent")
 
 [node name="TransportComponent" type="Node2D" parent="." unique_id=1392588808 node_paths=PackedStringArray("inventoryComponent", "visualComponent")]
 script = ExtResource("3_xm13r")

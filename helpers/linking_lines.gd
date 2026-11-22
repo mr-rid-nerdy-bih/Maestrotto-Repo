@@ -6,7 +6,7 @@ var linkLines :=  {}
 func _process(_delta: float) -> void:
 	var halfCell := Vector2(GridManager.CELL_SIZE, GridManager.CELL_SIZE) / 2.0
 	
-	for cell in links:
+	for cell: Vector2i in links:
 		var cell1: Vector2i = links[cell]["to"]
 		var fromPos := GridManager.get_global_at(cell) + halfCell
 		var toPos := GridManager.get_global_at(cell1) + halfCell
@@ -31,15 +31,15 @@ func _process(_delta: float) -> void:
 			line.set_point_position(0, fromPos)
 			line.set_point_position(1, toPos)
 	
-	for cell in linkLines.keys():
+	for cell: Vector2i in linkLines.keys():
 		if not links.has(cell):
 			linkLines[cell].queue_free()
 			linkLines.erase(cell)
 			return
 		
 		var cell1: Vector2i = links[cell]["to"]
-		var fromBuilding
-		var toBuilding
+		var fromBuilding: Building
+		var toBuilding: Building
 		
 		fromBuilding = GridManager.get_building_at(cell)
 		toBuilding = GridManager.get_building_at(cell1)

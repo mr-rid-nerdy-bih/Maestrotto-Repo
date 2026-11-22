@@ -1,19 +1,23 @@
 class_name Building
 extends Node2D
 
-@export var buildingResource: BuildingResource
+@export var buildingResource: BuildingResource:
+	set(value):
+		buildingResource = value
+		_sync_resource()
 
 @export var generateComponent: GenerateItemComponent
 @export var transportComponent: TransportComponent
 @export var inventoryComponent: InventoryComponent
 @export var linkingComponent: LinkingComponent
 @export var visualComponent: VisualComponent
+@export var craftComponent: CraftComponent
 
 var tickBirth: int
 var isActive: bool = true
 var type: BuildingTypes.Type
 
-var behaviorInstance
+var behaviorInstance: Script
 
 func _process(delta: float) -> void:
 	if visualComponent:
@@ -21,7 +25,8 @@ func _process(delta: float) -> void:
 
 func _ready() -> void:
 	if visualComponent:
-		visualComponent.set_sprite()
+		if buildingResource.texture:
+			visualComponent.set_sprite()
 		visualComponent.set_pos()
 		if visualComponent.isPreview:
 			return
@@ -33,9 +38,10 @@ func _ready() -> void:
 			if behaviorInstance and "building" in behaviorInstance:
 				behaviorInstance.building = self
 	
-	for i in get_children():
-		if "buildingResource" in i:
-			i.buildingResource = buildingResource
+	if inventoryComponent:
+		inventoryComponent.ready_input_cells()
+	if craftComponent:
+		craftComponent.check_crafts()
 	
 	TimeGlobal.ticked.connect(_on_tick)
 
@@ -56,3 +62,8 @@ func _on_tick() -> void:
 func link_to_building(building: Building) -> void:
 	transportComponent.toTransport = building
 	linkingComponent.setLinkAtLinkGroup()
+
+func _sync_resource() -> void:
+	for i in get_children():
+		if "buildingResource" in i:
+			i.buildingResource = buildingResource

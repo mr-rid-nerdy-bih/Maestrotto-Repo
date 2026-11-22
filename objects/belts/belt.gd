@@ -5,6 +5,8 @@ extends Building
 @export var itemSpacing: float = 10.0
 @export var previewTexture: Texture2D = preload("uid://bnd0nas1gxf3s")
 
+@export var anyItemResource: ItemResource
+
 var belts: Array[Dictionary] = []
 var cell: Vector2i
 var cell1: Vector2i
@@ -25,6 +27,9 @@ func _ready() -> void:
 			return
 	
 	type = buildingResource.buildingType
+	
+	inventoryComponent.add_input_cell(Vector2i(0, 0), anyItemResource)
+	inventoryComponent.add_output_cell(cell1 - cell, anyItemResource)
 	
 	_setup_points()
 	set_inbetweens()
@@ -98,7 +103,7 @@ func draw_on_grid() -> void:
 func child_items() -> void:
 	if not inventoryComponent or not line2D or line2D.get_point_count() < 2:
 		return
-	for item: Item in inventoryComponent.inputInventory:
+	for item: Item in inventoryComponent.inputCells[0].inventory:
 		if is_instance_valid(item) and item.get_parent() == null:
 			item.global_position = line2D.get_point_position(0)
 			item.z_index = 10

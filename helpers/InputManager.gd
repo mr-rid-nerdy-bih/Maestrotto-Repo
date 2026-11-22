@@ -1,14 +1,14 @@
 extends Node
 
-var worldMousePos
-var cell
-var hasBuilding
-var hasBelt
+var worldMousePos: Vector2
+var cell: Vector2i
+var hasBuilding: bool
+var hasBelt: bool
 var buildingAtCell: Building
 var buildStart: Vector2i
 var isBuildingDragged: bool = false
 
-var linkingBuilding
+var linkingBuilding: Building
 var beltStart: Vector2i
 var empty := Vector2i(-999999,-9999999)
 var isDraggingBelt: bool = false
@@ -20,6 +20,7 @@ var unselectedColor := Color(0.278, 0.278, 0.278, 0.671)
 var selectedColor := Color(0.121, 0.81, 0.121, 0.8)
 var currentMode := 0
 
+@warning_ignore("unused_parameter")
 func _process(delta: float) -> void:
 	if currentMode != 0:
 		GridManager.highlight = true
@@ -65,12 +66,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		if currentMode == 1 and not hasBuilding:
 			preview.changePreview(event, false)
 		elif hasBuilding:
-			buildingAtCell.visualComponent.dir = !buildingAtCell.visualComponent.dir
+			var dir: Vector2
+			dir = buildingAtCell.visualComponent.dir.rotated(deg_to_rad(90)).round()
+			
+			buildingAtCell.visualComponent.dir = dir
 			buildingAtCell.visualComponent.set_sprite()
 	
 	if event.is_action_pressed("debug"):
 		if hasBuilding:
-			print("Building type: ", buildingAtCell.type, ", input inventory: ", buildingAtCell.inventoryComponent.inputInventory," output inventory: ", buildingAtCell.inventoryComponent.outputInventory)
+			var inventory: InventoryComponent = buildingAtCell.inventoryComponent
+			
+			print("Building type: ", buildingAtCell.type)
+			print(inventory.inputCells, ",", inventory.outputCells)
+			print(buildingAtCell.buildingResource.inputCells)
 
 func calculateBeltPath(start: Vector2i, end: Vector2i) -> Dictionary:
 	var isStraight := (start.x == end.x or start.y == end.y)
@@ -89,14 +97,14 @@ func calculateBeltPath(start: Vector2i, end: Vector2i) -> Dictionary:
 			
 		# Calculate rotations for straight path
 		for i in range(beltCells.size()):
-			var c := beltCells[i][0]
+			var c: Vector2i = beltCells[i][0]
 			var dir := 0.0
 			if i < beltCells.size() - 1:
-				var nextCell := beltCells[i + 1][0]
+				var nextCell: Vector2i = beltCells[i + 1][0]
 				dir = getRotationFromVector(nextCell - c)
 			else:
 				if beltCells.size() > 1:
-					var prevCell := beltCells[i - 1][0]
+					var prevCell: Vector2i = beltCells[i - 1][0]
 					dir = getRotationFromVector(c - prevCell)
 			beltCells[i][1] = dir
 			
@@ -130,10 +138,10 @@ func calculateBeltPath(start: Vector2i, end: Vector2i) -> Dictionary:
 			beltCells1.append([current, 0.0])
 			
 		for i in range(beltCells.size()):
-			var c := beltCells[i][0]
+			var c: Vector2i = beltCells[i][0]
 			var dir := 0.0
 			if i < beltCells.size() - 1:
-				var nextCell := beltCells[i + 1][0]
+				var nextCell: Vector2i = beltCells[i + 1][0]
 				dir = getRotationFromVector(nextCell - c)
 			else:
 				if beltCells1.size() > 0:
@@ -141,17 +149,17 @@ func calculateBeltPath(start: Vector2i, end: Vector2i) -> Dictionary:
 			beltCells[i][1] = dir
 			
 		for i in range(beltCells1.size()):
-			var c := beltCells1[i][0]
+			var c: Vector2i = beltCells1[i][0]
 			var dir := 0.0
 			if i < beltCells1.size() - 1:
-				var nextCell := beltCells1[i + 1][0]
+				var nextCell: Vector2i = beltCells1[i + 1][0]
 				dir = getRotationFromVector(nextCell - c)
 			else:
 				if beltCells1.size() > 1:
-					var prevCell := beltCells1[i - 1][0]
+					var prevCell: Vector2i = beltCells1[i - 1][0]
 					dir = getRotationFromVector(c - prevCell)
 				elif beltCells.size() > 0:
-					var prevCell := beltCells[beltCells.size() - 1][0]
+					var prevCell: Vector2i = beltCells[beltCells.size() - 1][0]
 					dir = getRotationFromVector(c - prevCell)
 			beltCells1[i][1] = dir
 		beltCells1.erase(0)
@@ -177,7 +185,7 @@ func setSelected() -> void:
 		else:
 			panel.get_theme_stylebox("panel").bg_color = unselectedColor
 
-func buildFunc(event) -> void:
+func buildFunc(event: InputEvent) -> void:
 	if event.is_shift_pressed():
 		if event.is_action_pressed("confirmTile") and event.is_pressed():
 			beltStart = cell
@@ -217,14 +225,14 @@ func buildFunc(event) -> void:
 		placeBuildingAtCurrentCell()
 
 func placeBuildingAtCurrentCell() -> void:
-	var currentBuilding := preview.getCurrentBuilding()
-	var currentBuildingType := currentBuilding.type
-	var currentBuildingDir := currentBuilding.dir
+	var currentBuilding: Dictionary = preview.getCurrentBuilding()
+	var currentBuildingType: BuildingTypes.Type = currentBuilding.type
+	var currentBuildingDir: Vector2 = currentBuilding.dir
 	if currentBuildingType and not GridManager.has_building_at(cell):
 		GridManager.place_building_at(currentBuildingType, cell, currentBuildingDir)
 		print("Placed building (", currentBuildingType, ") at ", cell)
 
-func eraseFunc(event) -> void:
+func eraseFunc(event: InputEvent) -> void:
 	if event.is_action_pressed("confirmTile") and event.is_pressed():
 		isBuildingDragged = true
 		GridManager.erase_belt_at(cell)
@@ -240,7 +248,7 @@ func eraseFunc(event) -> void:
 		GridManager.erase_belt_at(cell)
 		GridManager.erase_building_at(cell)
 
-func linkFunc(event) -> void:
+func linkFunc(event: InputEvent) -> void:
 	if !event.is_pressed() or !event.is_action("confirmTile"):
 		return
 	

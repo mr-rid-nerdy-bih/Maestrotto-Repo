@@ -36,9 +36,26 @@ func transport_to() -> void:
 		toTransportInventory.inputInventory.append(item)
 		output.erase(item)
 
-func receive(item: Item, cell: Vector2i, dir: bool) -> bool:
-	var itemResource: ItemResource = item.itemResource
-	var selfDir: bool = visualComponent.dir
+func trans_to(outCell, ) -> void:
+	if !toTransport or not is_instance_valid(toTransport):
+		toTransport = null
+		return
+	
+	if buildingResource.passThroughInput:
+		for i in inventoryComponent.inputCells:
+			if i.inventory.size() < 1: continue
+			var item: Item = i.inventory[0]
+			
+			var accepted: bool = move_into_inventory(item, true)
+			if accepted:
+				i.inventory.erase(item)
+	
+	var isBelt: bool = toTransport.type == BuildingTypes.Type.BELT
+	
+	
+
+func receive(item: Item, cell: Vector2i, dir: Vector2) -> bool:
+	var selfDir: Vector2 = visualComponent.dir
 	var selfCell: Vector2i = visualComponent.cell
 	
 	for i: Dictionary in inventoryComponent.inputCells:
@@ -51,8 +68,39 @@ func receive(item: Item, cell: Vector2i, dir: bool) -> bool:
 		if dir != selfDir:
 			continue
 		
-		if i.itemResource == item.itemResource:
+		move_into_inventory(item)
+	
+	return false
+
+func move_into_inventory(item: Item, output: bool = false) -> bool:
+	if output:
+		@warning_ignore("untyped_declaration")
+		for i in inventoryComponent.outputCells:
+			if i.inventory.size() >= buildingResource.maxInput:
+				print("ItemSlot at ", visualComponent.cell, " filled. Move attempt failed")
+				return false
+			
+			if i.item.any:
+				i.inventory.append(item)
+				i.item = item.itemResource
+				return true
+			
+			if i.item.itemName != item.itemResource.itemName:
+				i.inventory.append(item)
+				return true
+			return false
+	@warning_ignore("untyped_declaration")
+	for i in inventoryComponent.inputCells:
+		if i.inventory.size() >= buildingResource.maxInput:
+			print("ItemSlot at ", visualComponent.cell, " filled. Move attempt failed")
+			return false
+		
+		if i.item.any:
+			i.inventory.append(item)
+			i.item = item.itemResource
+			return true
+		
+		if i.item.itemName != item.itemResource.itemName:
 			i.inventory.append(item)
 			return true
-	
 	return false

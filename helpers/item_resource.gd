@@ -4,3 +4,4 @@ extends Resource
 @export var itemName: String
 @export_multiline var description: String
 @export var frame: int
+@export var any: String = "Specific"
