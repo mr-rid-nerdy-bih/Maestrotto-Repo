@@ -1,27 +1,35 @@
 extends Node
+## Autoload that owns the grid: which building sits on which cell,
+## plus placing, erasing and looking up buildings and belts.
 
+## Size of one grid cell in pixels.
 const CELL_SIZE: float = 16.0
 
 @onready var game := get_tree().current_scene
 @onready var cam := game.get_node("Camera2D")
 @onready var beltLayer := game.get_node("TileMapLayer")
 
+## Cell -> Building. Belts are stored only at their start cell.
 var grid := {}
 var beltNodes: Array = []
 var buildingScene := preload("uid://b3y5h2c174ykj")
 var beltScene := preload("uid://dccu7jyorgrny")
+## Every BuildingResource in res://objects/machines/, keyed by building type.
 var buildingResources: Dictionary[int, BuildingResource] = {}
 
+## True while a tool mode is active; buildings near the mouse fade out.
 var highlight := false
 var hoveredCell: Vector2i = Vector2i(-1, -1)
+## Pixel radius around the mouse where buildings fade while highlighting.
 var mouseRange := 50
 
 ## Y-sorted container for machines: they draw above belts/items (z band),
 ## and lower rows draw in front of higher rows (y-sort).
 var buildingsNode: Node2D
 
+## Creates the Buildings container and loads every BuildingResource.
 func _ready() -> void:
-	TimeGlobal.ticked.connect(_on_tick)
+	TimeGlobal.ticked.connect(on_tick)
 
 	buildingsNode = game.get_node_or_null("Buildings")
 	if buildingsNode == null:
@@ -41,6 +49,7 @@ func _ready() -> void:
 			if loaded is BuildingResource:
 				buildingResources[loaded.buildingType] = loaded
 
+## Makes a building of [param building] type without placing it (used by the preview).
 func get_new_building(building: BuildingTypes.Type) -> Building:
 	if building == BuildingTypes.Type.NONE:
 		return null
@@ -51,13 +60,16 @@ func get_new_building(building: BuildingTypes.Type) -> Building:
 	newBuilding.buildingResource = buildingResources[building]
 	return newBuilding
 
+## World position -> grid cell.
 func get_coords_at(pos: Vector2) -> Vector2i:
 	var localPos: Vector2 = beltLayer.to_local(pos)
 	return beltLayer.local_to_map(localPos)
 
+## Grid cell -> world position of its top-left corner.
 func get_global_at(cell: Vector2i) -> Vector2:
 	return Vector2(cell) * CELL_SIZE
 
+## The building registered at [param cell], or null. Cleans up freed entries.
 func get_building_at(cell: Vector2i) -> Building:
 	if not grid.has(cell):
 		return null
@@ -72,6 +84,7 @@ func get_building_at(cell: Vector2i) -> Building:
 	
 	return null
 
+## The belt covering [param cell] (any cell along it, not just the start), or null.
 func get_belt_at(cell: Vector2i) -> Building:
 	for obj in grid.values():
 		if not is_instance_valid(obj) or !(obj.type and obj.type == BuildingTypes.Type.BELT):
@@ -85,23 +98,26 @@ func get_belt_at(cell: Vector2i) -> Building:
 func has_building_at(cell: Vector2i) -> bool:
 	return get_building_at(cell) != null
 
+## Same as has_building_at; kept for readability at call sites.
 func has_machine_at(cell: Vector2i) -> bool:
 	return has_building_at(cell)
 
 func has_belt_at(cell: Vector2i) -> bool:
 	return get_belt_at(cell) != null
 
-func place_building_at(building_data, cell: Vector2i, dir: Vector2 = Vector2.RIGHT) -> void:
+## Places a machine. [param buildingData] is a BuildingTypes.Type or a
+## {type, dir} Dictionary. Replaces whatever was on the cell.
+func place_building_at(buildingData, cell: Vector2i, dir: Vector2 = Vector2.RIGHT) -> void:
 	var buildingType: BuildingTypes.Type
 	var facingDir: Vector2 = dir
 	
-	if building_data is Dictionary:
-		buildingType = building_data.get("type", BuildingTypes.Type.NONE)
-		facingDir = building_data.get("dir", dir)
-	elif building_data is BuildingTypes.Type or typeof(building_data) == TYPE_INT:
-		buildingType = building_data as BuildingTypes.Type
+	if buildingData is Dictionary:
+		buildingType = buildingData.get("type", BuildingTypes.Type.NONE)
+		facingDir = buildingData.get("dir", dir)
+	elif buildingData is BuildingTypes.Type or typeof(buildingData) == TYPE_INT:
+		buildingType = buildingData as BuildingTypes.Type
 	else:
-		push_error("Invalid building argument passed to place_building_at: %s" % [building_data])
+		push_error("Invalid building argument passed to place_building_at: %s" % [buildingData])
 		return
 	
 	if buildingType == BuildingTypes.Type.NONE:
@@ -134,6 +150,7 @@ func place_building_at(building_data, cell: Vector2i, dir: Vector2 = Vector2.RIG
 	buildingsNode.add_child(newBuilding)
 	grid[cell] = newBuilding
 
+## Removes the machine on [param cell]. Belts are skipped; use erase_belt_at.
 func erase_building_at(cell: Vector2i) -> void:
 	if grid.has(cell):
 		var obj = grid[cell]
@@ -142,6 +159,8 @@ func erase_building_at(cell: Vector2i) -> void:
 				obj.queue_free()
 		grid.erase(cell)
 
+## Places a straight belt from [param cell] to [param cell1], clearing
+## everything along its path first.
 func place_belt_at(cell: Vector2i, cell1: Vector2i) -> void:
 	# Clear EVERY cell the belt will cover, not just the ends — otherwise
 	# machines under the middle of the belt get orphaned ("ghosts").
@@ -167,6 +186,7 @@ func place_belt_at(cell: Vector2i, cell1: Vector2i) -> void:
 	grid[cell] = newBelt
 	print("Placed belt spanning from ", cell, " to ", cell1)
 
+## Removes the whole belt that covers [param cell], including its tiles.
 func erase_belt_at(cell: Vector2i) -> void:
 	var belt = get_belt_at(cell)
 	if belt and is_instance_valid(belt):
@@ -190,11 +210,13 @@ func erase_belt_at(cell: Vector2i) -> void:
 		belt.queue_free()
 		print("Erased belt containing cell: ", cell)
 
+## True if the two cells share a row or a column.
 func is_straight(cellA: Vector2i, cellB: Vector2i) -> bool:
 	var diff := cellB - cellA
 	return diff.x == 0 or diff.y == 0
 
-func _on_tick() -> void:
+## Drops grid entries whose building has been freed.
+func on_tick() -> void:
 	var invalidKeys: Array = []
 	for key in grid.keys():
 		if not is_instance_valid(grid[key]):

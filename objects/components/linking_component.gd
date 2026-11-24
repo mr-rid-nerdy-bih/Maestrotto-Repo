@@ -1,5 +1,6 @@
 class_name LinkingComponent
 extends Node2D
+## Registers this building's link with the Links node so a line gets drawn.
 
 @export var visualComponent: VisualComponent
 @export var transportComponent: TransportComponent
@@ -7,7 +8,8 @@ var buildingResource: BuildingResource
 
 @onready var links := get_tree().current_scene.get_node("Links")
 
-func setLinkAtLinkGroup() -> void:
+## Adds, updates or removes this building's entry in Links.links.
+func set_link_at_link_group() -> void:
 	var source := get_parent() as Building
 	var target := transportComponent.toTransport
 	if not target:

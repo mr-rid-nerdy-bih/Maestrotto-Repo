@@ -10,6 +10,7 @@ const Side := InventoryComponent.Side
 @export var visualComponent: VisualComponent
 var buildingResource: BuildingResource
 
+## The building this one sends its output to, or null.
 var toTransport: Building
 
 ## Called once per tick by Building.
@@ -17,12 +18,12 @@ func transport_to() -> void:
 	if not is_instance_valid(toTransport):
 		toTransport = null
 	if buildingResource and buildingResource.passThroughInput:
-		_pass_through()
+		pass_through()
 	if toTransport:
 		push_outputs()
 
 ## Input -> output, for buildings that don't craft (chute, canister, packager).
-func _pass_through() -> void:
+func pass_through() -> void:
 	for item: Item in inventoryComponent.get_items(Side.INPUT):
 		if not inventoryComponent.can_insert(item.itemResource, Side.OUTPUT):
 			break
@@ -47,6 +48,7 @@ func send(item: Item, fromSide: int = Side.OUTPUT) -> bool:
 	receiver.receive(item)
 	return true
 
+## Asks this building whether it can take [param item] right now.
 func can_receive(item: Item) -> bool:
 	if not is_instance_valid(item) or inventoryComponent == null:
 		return false
@@ -55,6 +57,7 @@ func can_receive(item: Item) -> bool:
 		return false
 	return inventoryComponent.can_insert(item.itemResource, Side.INPUT)
 
+## Takes [param item] into the input side. Returns false if it can't.
 func receive(item: Item) -> bool:
 	if not can_receive(item):
 		return false

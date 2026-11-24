@@ -1,4 +1,6 @@
 extends Node
+## Autoload that turns mouse/keyboard input into build, erase and link actions.
+## Modes: 0 = none, 1 = build, 2 = erase, 3 = link.
 
 var worldMousePos: Vector2
 var cell: Vector2i
@@ -10,6 +12,7 @@ var isBuildingDragged: bool = false
 
 var linkingBuilding: Building
 var beltStart: Vector2i
+## Sentinel meaning "no belt drag in progress".
 var empty := Vector2i(-999999,-9999999)
 var isDraggingBelt: bool = false
 
@@ -18,6 +21,7 @@ var isDraggingBelt: bool = false
 
 var unselectedColor := Color(0.278, 0.278, 0.278, 0.671)
 var selectedColor := Color(0.121, 0.81, 0.121, 0.8)
+## Active tool: 0 none, 1 build, 2 erase, 3 link.
 var currentMode := 0
 
 @warning_ignore("unused_parameter")
@@ -27,6 +31,7 @@ func _process(delta: float) -> void:
 	else:
 		GridManager.highlight = false
 
+## Updates what's under the mouse, switches modes, then hands the event to the active mode.
 func _unhandled_input(event: InputEvent) -> void:
 	worldMousePos = GridManager.cam.get_global_mouse_position()
 	cell = GridManager.get_coords_at(worldMousePos)
@@ -50,21 +55,21 @@ func _unhandled_input(event: InputEvent) -> void:
 			currentMode = 0
 		else: currentMode = 3
 	
-	setSelected()
+	set_selected()
 	
 	match currentMode:
-		1: buildFunc(event)
-		2: eraseFunc(event)
-		3: linkFunc(event)
+		1: build_func(event)
+		2: erase_func(event)
+		3: link_func(event)
 	
 	
 	if event.is_action_pressed("cycleUp") or event.is_action_pressed("cycleDown"):
-		preview.changePreview(event, false)
+		preview.change_preview(event, false)
 		print("Cycling.. current building number is ", preview.cycleNum)
 	
 	if event.is_action_pressed("flip"):
 		if currentMode == 1 and not hasBuilding:
-			preview.changePreview(event, false)
+			preview.change_preview(event, false)
 		elif hasBuilding:
 			var dir: Vector2
 			dir = buildingAtCell.visualComponent.dir.rotated(deg_to_rad(90)).round()
@@ -78,7 +83,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			print(buildingAtCell.inventoryComponent.debug_string())
 			print("Linked to: ", buildingAtCell.transportComponent.toTransport)
 
-func calculateBeltPath(start: Vector2i, end: Vector2i) -> Dictionary:
+## Cells (and rotations) for a belt from [param start] to [param end].
+## An L-shaped drag is split into two segments at cornerCell.
+func calculate_belt_path(start: Vector2i, end: Vector2i) -> Dictionary:
 	var isStraight := (start.x == end.x or start.y == end.y)
 	
 	if isStraight:
@@ -99,11 +106,11 @@ func calculateBeltPath(start: Vector2i, end: Vector2i) -> Dictionary:
 			var dir := 0.0
 			if i < beltCells.size() - 1:
 				var nextCell: Vector2i = beltCells[i + 1][0]
-				dir = getRotationFromVector(nextCell - c)
+				dir = get_rotation_from_vector(nextCell - c)
 			else:
 				if beltCells.size() > 1:
 					var prevCell: Vector2i = beltCells[i - 1][0]
-					dir = getRotationFromVector(c - prevCell)
+					dir = get_rotation_from_vector(c - prevCell)
 			beltCells[i][1] = dir
 			
 		return {
@@ -140,10 +147,10 @@ func calculateBeltPath(start: Vector2i, end: Vector2i) -> Dictionary:
 			var dir := 0.0
 			if i < beltCells.size() - 1:
 				var nextCell: Vector2i = beltCells[i + 1][0]
-				dir = getRotationFromVector(nextCell - c)
+				dir = get_rotation_from_vector(nextCell - c)
 			else:
 				if beltCells1.size() > 0:
-					dir = getRotationFromVector(beltCells1[0][0] - c)
+					dir = get_rotation_from_vector(beltCells1[0][0] - c)
 			beltCells[i][1] = dir
 			
 		for i in range(beltCells1.size()):
@@ -151,14 +158,14 @@ func calculateBeltPath(start: Vector2i, end: Vector2i) -> Dictionary:
 			var dir := 0.0
 			if i < beltCells1.size() - 1:
 				var nextCell: Vector2i = beltCells1[i + 1][0]
-				dir = getRotationFromVector(nextCell - c)
+				dir = get_rotation_from_vector(nextCell - c)
 			else:
 				if beltCells1.size() > 1:
 					var prevCell: Vector2i = beltCells1[i - 1][0]
-					dir = getRotationFromVector(c - prevCell)
+					dir = get_rotation_from_vector(c - prevCell)
 				elif beltCells.size() > 0:
 					var prevCell: Vector2i = beltCells[beltCells.size() - 1][0]
-					dir = getRotationFromVector(c - prevCell)
+					dir = get_rotation_from_vector(c - prevCell)
 			beltCells1[i][1] = dir
 		beltCells1.erase(0)
 		
@@ -167,14 +174,16 @@ func calculateBeltPath(start: Vector2i, end: Vector2i) -> Dictionary:
 			"cornerCell": cornerCell
 		}
 
-func getRotationFromVector(v: Vector2i) -> float:
+## Direction one step -> rotation in degrees.
+func get_rotation_from_vector(v: Vector2i) -> float:
 	if v == Vector2i(1, 0): return 0.0
 	elif v == Vector2i(0, 1): return 90.0
 	elif v == Vector2i(-1, 0): return 180.0
 	elif v == Vector2i(0, -1): return 270.0
 	return 0.0
 
-func setSelected() -> void:
+## Highlights the toolbar panel of the active mode.
+func set_selected() -> void:
 	for i in range(toolBox.get_child_count()):
 		var panel := toolBox.get_child(i)
 		
@@ -183,26 +192,27 @@ func setSelected() -> void:
 		else:
 			panel.get_theme_stylebox("panel").bg_color = unselectedColor
 
-func buildFunc(event: InputEvent) -> void:
+## Build mode: click/drag places machines, shift + drag places a belt.
+func build_func(event: InputEvent) -> void:
 	if event.is_shift_pressed():
 		if event.is_action_pressed("confirmTile") and event.is_pressed():
 			beltStart = cell
 			isDraggingBelt = true
-			var pathCells := calculateBeltPath(beltStart, cell)
+			var pathCells := calculate_belt_path(beltStart, cell)
 			preview.belt(pathCells["pathCells"], true)
 			print("STARTED DRAG at cell: ", beltStart)
 			return
 		
 		if event is InputEventMouseMotion and isDraggingBelt:
 			if beltStart:
-				var pathCells := calculateBeltPath(beltStart, cell)
+				var pathCells := calculate_belt_path(beltStart, cell)
 				preview.belt(pathCells["pathCells"], true)
 		
 		if event.is_action_released("confirmTile") and isDraggingBelt:
 			isDraggingBelt = false
 			preview.belt([], false)
 			if beltStart != empty:
-				var pathCells := calculateBeltPath(beltStart, cell)
+				var pathCells := calculate_belt_path(beltStart, cell)
 				if pathCells["cornerCell"] == null:
 					GridManager.place_belt_at(beltStart, cell)
 			beltStart = empty
@@ -211,7 +221,7 @@ func buildFunc(event: InputEvent) -> void:
 	
 	if event.is_action_pressed("confirmTile") and event.is_pressed():
 		isBuildingDragged = true
-		placeBuildingAtCurrentCell()
+		place_building_at_current_cell()
 		return
 		
 	if event.is_action_released("confirmTile"):
@@ -220,17 +230,19 @@ func buildFunc(event: InputEvent) -> void:
 		
 	# When the mouse moves while holding down the mouse button
 	if event is InputEventMouseMotion and isBuildingDragged:
-		placeBuildingAtCurrentCell()
+		place_building_at_current_cell()
 
-func placeBuildingAtCurrentCell() -> void:
-	var currentBuilding: Dictionary = preview.getCurrentBuilding()
+## Places the building currently shown in the preview at the hovered cell.
+func place_building_at_current_cell() -> void:
+	var currentBuilding: Dictionary = preview.get_current_building()
 	var currentBuildingType: BuildingTypes.Type = currentBuilding.type
 	var currentBuildingDir: Vector2 = currentBuilding.dir
 	if currentBuildingType and not GridManager.has_building_at(cell):
 		GridManager.place_building_at(currentBuildingType, cell, currentBuildingDir)
 		print("Placed building (", currentBuildingType, ") at ", cell)
 
-func eraseFunc(event: InputEvent) -> void:
+## Erase mode: click/drag removes belts and machines.
+func erase_func(event: InputEvent) -> void:
 	if event.is_action_pressed("confirmTile") and event.is_pressed():
 		isBuildingDragged = true
 		GridManager.erase_belt_at(cell)
@@ -246,7 +258,8 @@ func eraseFunc(event: InputEvent) -> void:
 		GridManager.erase_belt_at(cell)
 		GridManager.erase_building_at(cell)
 
-func linkFunc(event: InputEvent) -> void:
+## Link mode: click a source, then a target. Clicking the current target again unlinks.
+func link_func(event: InputEvent) -> void:
 	if !event.is_pressed() or !event.is_action("confirmTile"):
 		return
 	

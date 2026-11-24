@@ -1,6 +1,7 @@
 @tool
 class_name BuildingTypes
 extends RefCounted
+## Every building type in the game. Add new machines here.
 
 enum Type {
 	NONE = 0,

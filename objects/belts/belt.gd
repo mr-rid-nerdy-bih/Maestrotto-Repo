@@ -6,15 +6,21 @@ extends Building
 const Side := InventoryComponent.Side
 
 @export var line2D: Line2D
+## Pixels per second items travel.
 @export var speed: float = 20.0
+## Minimum pixels between items.
 @export var itemSpacing: float = 10.0
 @export var previewTexture: Texture2D = preload("uid://bnd0nas1gxf3s")
 
 @export var anyItemResource: ItemResource
 
+## Every cell the belt covers, with its tile rotation.
 var belts: Array[Dictionary] = []
+## Start cell.
 var cell: Vector2i
+## End cell (items leave here).
 var cell1: Vector2i
+## False until the last item has moved far enough to fit a new one.
 var canInput: bool = true
 var isPreview: bool = false
 
@@ -28,34 +34,36 @@ func _ready() -> void:
 	if visualComponent:
 		visualComponent.cell = cell
 		if visualComponent.isPreview or isPreview:
-			_setup_preview()
+			setup_preview()
 			return
 
-	_sync_resource()
+	sync_resource()
 	type = buildingResource.buildingType
 	inventoryComponent.setup()
 
-	_setup_points()
-	_fit_capacity_to_length()
+	setup_points()
+	fit_capacity_to_length()
 	set_inbetweens()
 	draw_on_grid()
 
 ## A belt's capacity is however many items physically fit on it,
 ## not the generic maxInput (which capped every belt at 10).
-func _fit_capacity_to_length() -> void:
-	var length := _start_pos().distance_to(_end_pos())
+func fit_capacity_to_length() -> void:
+	var length := start_pos().distance_to(end_pos())
 	var fits := int(length / itemSpacing) + 1
 	for slot: InventorySlot in inventoryComponent.inputSlots:
 		slot.capacity = fits
 
-func _setup_preview() -> void:
+## Turns this belt into a single ghost tile for the build preview.
+func setup_preview() -> void:
 	var sprite: Sprite2D = Sprite2D.new()
 	sprite.texture = previewTexture
 	sprite.centered = true
 	global_position += Vector2(8, 8)
 	add_child(sprite)
 
-func _setup_points() -> void:
+## Sets the Line2D from the centre of the start cell to the centre of the end cell.
+func setup_points() -> void:
 	if not line2D or line2D.get_point_count() >= 2:
 		return
 	line2D.clear_points()
@@ -66,11 +74,13 @@ func _setup_points() -> void:
 	line2D.add_point(startPos)
 	line2D.add_point(endPos)
 
+## Belt direction in radians.
 func get_rot() -> float:
 	if not line2D or line2D.get_point_count() < 2:
 		return 0.0
 	return line2D.get_point_position(0).angle_to_point(line2D.get_point_position(1))
 
+## Tile atlas coordinates for the belt's direction.
 func get_coords() -> Vector2i:
 	var rotDeg := rad_to_deg(get_rot())
 	var normalizedRot := int(round(fposmod(rotDeg, 360.0))) % 360
@@ -84,6 +94,7 @@ func get_coords() -> Vector2i:
 
 	return Vector2i(0, y)
 
+## Fills [member belts] with every cell between start and end.
 func set_inbetweens() -> void:
 	belts.clear()
 
@@ -103,42 +114,51 @@ func set_inbetweens() -> void:
 	for i in range(count + 1):
 		belts.append({"cell": cell + dir * i, "rotation": atlasCoords})
 
+## Draws the belt tiles onto the TileMapLayer.
 func draw_on_grid() -> void:
 	for b in belts:
 		GridManager.beltLayer.set_cell(b.cell, 1, b.rotation)
 
 # Belts move items in _process (smooth), not on the tick.
-func _on_tick() -> void:
+func on_tick() -> void:
 	pass
 
 # --- Transport hooks -------------------------------------------------------
 
+## Only accepts an item when the start of the belt is clear.
 func can_receive_item(_item: Item) -> bool:
 	return canInput
 
+## Puts a newly received item at the start of the belt.
 func on_item_received(item: Item) -> void:
+	# Close the gate immediately: canInput is only refreshed in _process, so
+	# without this a machine could push its whole output in one tick (a batch).
+	canInput = false
 	item.currentLerp = 0.0
 	item.z_index = ZLayers.ITEM
 	add_child(item) # child of the belt -> freed automatically when the belt is erased
-	item.global_position = _start_pos()
+	item.global_position = start_pos()
 
 # --- Movement --------------------------------------------------------------
 
-func _start_pos() -> Vector2:
+## World position where items enter.
+func start_pos() -> Vector2:
 	return line2D.to_global(line2D.get_point_position(0))
 
-func _end_pos() -> Vector2:
+## World position where items leave.
+func end_pos() -> Vector2:
 	return line2D.to_global(line2D.get_point_position(1))
 
-func _process(_delta: float) -> void:
+## Moves every item along the belt and hands the front one off at the end.
+func _process(delta: float) -> void:
 	if isPreview or not line2D or line2D.get_point_count() < 2:
 		return
 
-	var start := _start_pos()
-	var end := _end_pos()
+	var start := start_pos()
+	var end := end_pos()
 	var length := maxf(start.distance_to(end), 1.0)
 	var spacing := itemSpacing / length # spacing measured in "lerp units"
-	var step := speed * _delta / length
+	var step := speed * delta / length
 
 	# Index 0 is the front item (oldest). Each item may move up to the item ahead.
 	var items := inventoryComponent.get_items(Side.INPUT)

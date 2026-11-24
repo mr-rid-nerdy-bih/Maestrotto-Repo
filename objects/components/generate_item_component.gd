@@ -1,5 +1,7 @@
 class_name GenerateItemComponent
 extends Node2D
+## Crafts items: waits out the cooldown, consumes the recipe's inputs and
+## puts the outputs into the output slots.
 
 const Side := InventoryComponent.Side
 
@@ -10,8 +12,10 @@ const Side := InventoryComponent.Side
 @export var craftComponent: CraftComponent
 var buildingResource: BuildingResource
 
+## Ticks waited since the last craft.
 var currentCooldown: float = 0.0
 
+## Called every tick. Crafts once the cooldown is done and there's room.
 func generate() -> void:
 	if buildingResource == null or not buildingResource.canGenerate:
 		return
@@ -27,7 +31,7 @@ func generate() -> void:
 		return
 
 	# Check for room BEFORE consuming, so a full machine never eats its inputs.
-	if not _has_room_for(recipe.outputItems):
+	if not has_room_for(recipe.outputItems):
 		return
 
 	inventoryComponent.consume(recipe.requiredItems)
@@ -38,7 +42,8 @@ func generate() -> void:
 
 	currentCooldown = 0.0
 
-func _has_room_for(outputs: Array[ItemResource]) -> bool:
+## True if every output item fits in the output slots.
+func has_room_for(outputs: Array[ItemResource]) -> bool:
 	# Good enough for 1-item outputs; multi-output recipes into one slot
 	# would need a proper "free space" count.
 	for res: ItemResource in outputs:
@@ -46,6 +51,7 @@ func _has_room_for(outputs: Array[ItemResource]) -> bool:
 			return false
 	return true
 
+## Creates a new Item node of type [param res] (not added to the tree).
 func make_item(res: ItemResource) -> Item:
 	var newItem: Item = itemScene.instantiate()
 	newItem.itemResource = res

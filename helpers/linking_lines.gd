@@ -5,10 +5,16 @@ extends Node2D
 var links := {}
 var linkLines := {}
 
+## Keeps one Line2D per link in sync. Only visible in link mode.
 func _process(_delta: float) -> void:
 	var halfCell := Vector2(GridManager.CELL_SIZE, GridManager.CELL_SIZE) / 2.0
-
-	# 1. Drop links whose buildings are gone or no longer linked to each other.
+	
+	if InputManager.currentMode == 3:
+		visible = true
+	else:
+		visible = false
+	
+	# Drop links whose buildings are gone or no longer linked to each other.
 	for key in links.keys():
 		var link: Dictionary = links[key]
 		var source = link.get("source")
@@ -17,13 +23,13 @@ func _process(_delta: float) -> void:
 				or source.transportComponent.toTransport != target:
 			links.erase(key)
 
-	# 2. Remove lines that no longer have a link.
+	# Remove lines that no longer have a link.
 	for key in linkLines.keys():
 		if not links.has(key):
 			linkLines[key].queue_free()
 			linkLines.erase(key)
 
-	# 3. Create / update a line for every link.
+	# Create or update a line for every link.
 	for key in links:
 		var link: Dictionary = links[key]
 		var line: Line2D = linkLines.get(key)
@@ -35,11 +41,12 @@ func _process(_delta: float) -> void:
 			line.add_point(Vector2.ZERO)
 			add_child(line)
 			linkLines[key] = line
-		line.default_color = _color_for(link["endBuildingType"])
+		line.default_color = color_for(link["endBuildingType"])
 		line.set_point_position(0, GridManager.get_global_at(link["from"]) + halfCell)
 		line.set_point_position(1, GridManager.get_global_at(link["to"]) + halfCell)
 
-func _color_for(type: BuildingTypes.Type) -> Color:
+## Line colour based on the type of building being linked to.
+func color_for(type: BuildingTypes.Type) -> Color:
 	match type:
 		BuildingTypes.Type.PACKAGER: return Color.GREEN
 		BuildingTypes.Type.CHUTE: return Color.ORANGE

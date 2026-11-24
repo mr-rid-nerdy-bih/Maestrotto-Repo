@@ -3,6 +3,7 @@ extends Node2D
 ## Owns every item a building holds. Nothing else should touch the slot
 ## arrays directly — go through insert / remove / get_items / consume.
 
+## Which half of the inventory to use.
 enum Side { INPUT, OUTPUT }
 
 var buildingResource: BuildingResource
@@ -18,10 +19,11 @@ func setup() -> void:
 	var maxOut := buildingResource.maxOutput if buildingResource else 10
 	var inDefs: Array[ItemSlot] = buildingResource.inputCells if buildingResource else ([] as Array[ItemSlot])
 	var outDefs: Array[ItemSlot] = buildingResource.outputCells if buildingResource else ([] as Array[ItemSlot])
-	inputSlots = _make_slots(inDefs, maxIn)
-	outputSlots = _make_slots(outDefs, maxOut)
+	inputSlots = make_slots(inDefs, maxIn)
+	outputSlots = make_slots(outDefs, maxOut)
 
-func _make_slots(defs: Array[ItemSlot], capacity: int) -> Array[InventorySlot]:
+## Turns slot definitions into runtime slots, or one wildcard slot if there are none.
+func make_slots(defs: Array[ItemSlot], capacity: int) -> Array[InventorySlot]:
 	var result: Array[InventorySlot] = []
 	for def: ItemSlot in defs:
 		if def != null:
@@ -30,28 +32,32 @@ func _make_slots(defs: Array[ItemSlot], capacity: int) -> Array[InventorySlot]:
 		result.append(InventorySlot.new(Vector2i.ZERO, null, capacity))
 	return result
 
-func _slots(side: int) -> Array[InventorySlot]:
+## The input or output slots.
+func get_slots(side: int) -> Array[InventorySlot]:
 	return inputSlots if side == Side.INPUT else outputSlots
 
 # --- Insert / remove -------------------------------------------------------
 
+## True if an item of type [param res] fits on [param side].
 func can_insert(res: ItemResource, side: int) -> bool:
-	for slot: InventorySlot in _slots(side):
+	for slot: InventorySlot in get_slots(side):
 		if slot.accepts(res):
 			return true
 	return false
 
+## Puts [param item] in the first slot that accepts it. Returns false if full.
 func insert(item: Item, side: int) -> bool:
 	if not is_instance_valid(item):
 		return false
-	for slot: InventorySlot in _slots(side):
+	for slot: InventorySlot in get_slots(side):
 		if slot.accepts(item.itemResource):
 			slot.items.append(item)
 			return true
 	return false
 
+## Takes [param item] out of [param side] (doesn't free it).
 func remove(item: Item, side: int) -> bool:
-	for slot: InventorySlot in _slots(side):
+	for slot: InventorySlot in get_slots(side):
 		var idx := slot.items.find(item)
 		if idx != -1:
 			slot.items.remove_at(idx)
@@ -61,16 +67,18 @@ func remove(item: Item, side: int) -> bool:
 ## Returns a *copy* (oldest first), so callers can remove items while looping.
 func get_items(side: int) -> Array[Item]:
 	var result: Array[Item] = []
-	for slot: InventorySlot in _slots(side):
+	for slot: InventorySlot in get_slots(side):
 		slot.prune_invalid()
 		result.append_array(slot.items)
 	return result
 
+## True if [param side] holds no items.
 func is_empty(side: int) -> bool:
 	return get_items(side).is_empty()
 
 # --- Recipe helpers (input side) ------------------------------------------
 
+## How many input items match [param res] (wildcard counts everything).
 func count(res: ItemResource) -> int:
 	var total := 0
 	for item: Item in get_items(Side.INPUT):
@@ -109,15 +117,16 @@ func consume(required: Array[ItemResource]) -> void:
 			continue
 		for item: Item in get_items(Side.INPUT):
 			if item.itemResource == res:
-				_destroy(item)
+				destroy(item)
 				break
 	for i in wildcards:
 		var left := get_items(Side.INPUT)
 		if left.is_empty():
 			break
-		_destroy(left[0])
+		destroy(left[0])
 
-func _destroy(item: Item) -> void:
+## Removes an input item and frees it.
+func destroy(item: Item) -> void:
 	remove(item, Side.INPUT)
 	item.queue_free()
 
@@ -133,13 +142,15 @@ func _notification(what: int) -> void:
 			if is_instance_valid(item) and item.get_parent() == null:
 				item.free()
 
+## Readable summary of both sides, for the debug key.
 func debug_string() -> String:
 	return "in: %d %s | out: %d %s" % [
-		get_items(Side.INPUT).size(), _names(Side.INPUT),
-		get_items(Side.OUTPUT).size(), _names(Side.OUTPUT),
+		get_items(Side.INPUT).size(), item_names(Side.INPUT),
+		get_items(Side.OUTPUT).size(), item_names(Side.OUTPUT),
 	]
 
-func _names(side: int) -> Array[String]:
+## Item names on [param side], for debug output.
+func item_names(side: int) -> Array[String]:
 	var names: Array[String] = []
 	for item: Item in get_items(side):
 		names.append(item.itemResource.itemName if item.itemResource else "?")

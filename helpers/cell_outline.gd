@@ -1,4 +1,5 @@
 extends Node2D
+## Square outline around the hovered cell; colour shows the active mode.
 
 @onready var top: Line2D = $Top
 @onready var bottom: Line2D = $Bottom
@@ -12,8 +13,8 @@ func _ready() -> void:
 		line.z_index = ZLayers.CELL_OUTLINE
 
 func _process(_delta: float) -> void:
-	# Only show when in build mode (adjust condition based on your InputManager mode)
-	if InputManager.currentMode == 0: # Assuming 1 is build mode
+# Hidden when no tool mode is active.
+	if InputManager.currentMode == 0:
 		visible = false
 		return
 	

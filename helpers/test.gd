@@ -1,5 +1,8 @@
 extends Node2D
+## The build preview that follows the mouse: a ghost machine, or ghost
+## belt tiles while shift-dragging.
 
+## Index into enumValues of the selected building.
 var cycleNum := 1
 var isBelting := false
 var dir: Vector2 = Vector2.LEFT
@@ -12,7 +15,7 @@ func _ready() -> void:
 	beltGroup.top_level = true
 	z_index = ZLayers.PREVIEW
 	
-	changePreview(null, true)
+	change_preview(null, true)
 
 func _process(delta: float) -> void:
 	visible = InputManager.currentMode == 1
@@ -27,7 +30,9 @@ func _process(delta: float) -> void:
 		machinesGroup.visible = true
 		beltGroup.visible = false
 
-func changePreview(event: InputEvent, skipEventCheck: bool) -> void:
+## Rotates or cycles the previewed building, then rebuilds the preview.
+## NONE and BELT are skipped since they can't be placed as machines.
+func change_preview(event: InputEvent, skipEventCheck: bool) -> void:
 	if !skipEventCheck:
 		if event.is_action_pressed("flip"):
 			dir = dir.rotated(deg_to_rad(90)).round()
@@ -58,12 +63,14 @@ func changePreview(event: InputEvent, skipEventCheck: bool) -> void:
 		
 		currentBuilding.position = Vector2.ZERO
 
-func getCurrentBuilding() -> Dictionary:
+## The selected building as {type, dir}, for placing.
+func get_current_building() -> Dictionary:
 	var building :=  {}
 	building.type = enumValues[cycleNum]
 	building.dir = dir
 	return building
 
+## Shows ghost belt tiles for [param cells], or clears them when [param sets] is false.
 func belt(cells: Array, sets: bool) -> void:
 	isBelting = sets
 	

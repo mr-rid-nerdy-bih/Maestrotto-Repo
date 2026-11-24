@@ -1,5 +1,6 @@
 class_name CraftComponent
 extends Node2D
+## Picks which recipe a building can craft right now.
 
 @export var inventoryComponent: InventoryComponent
 @export var generateItemComponent: GenerateItemComponent
