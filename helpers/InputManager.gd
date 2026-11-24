@@ -74,11 +74,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	
 	if event.is_action_pressed("debug"):
 		if hasBuilding:
-			var inventory: InventoryComponent = buildingAtCell.inventoryComponent
-			
 			print("Building type: ", buildingAtCell.type)
-			print(inventory.inputCells, ",", inventory.outputCells)
-			print(buildingAtCell.buildingResource.inputCells)
+			print(buildingAtCell.inventoryComponent.debug_string())
+			print("Linked to: ", buildingAtCell.transportComponent.toTransport)
 
 func calculateBeltPath(start: Vector2i, end: Vector2i) -> Dictionary:
 	var isStraight := (start.x == end.x or start.y == end.y)
@@ -269,6 +267,6 @@ func linkFunc(event: InputEvent) -> void:
 		if linkingBuilding: print("Not able to link this building.")
 		linkingBuilding = null
 	else:
-		if hasBuilding:
+		if hasBuilding or hasBelt:
 			linkingBuilding = buildingAtCell
 			print("Linking object ", buildingAtCell, " at ", cell)

@@ -9,7 +9,7 @@ func _ready() -> void:
 	# Configure default look for all lines
 	for line in [top, bottom, left, right]:
 		line.width = 2.0
-		line.z_index = 30 # Ensure it renders above buildings and belts
+		line.z_index = ZLayers.CELL_OUTLINE
 
 func _process(_delta: float) -> void:
 	# Only show when in build mode (adjust condition based on your InputManager mode)

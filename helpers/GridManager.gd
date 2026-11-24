@@ -16,8 +16,20 @@ var highlight := false
 var hoveredCell: Vector2i = Vector2i(-1, -1)
 var mouseRange := 50
 
+## Y-sorted container for machines: they draw above belts/items (z band),
+## and lower rows draw in front of higher rows (y-sort).
+var buildingsNode: Node2D
+
 func _ready() -> void:
 	TimeGlobal.ticked.connect(_on_tick)
+
+	buildingsNode = game.get_node_or_null("Buildings")
+	if buildingsNode == null:
+		buildingsNode = Node2D.new()
+		buildingsNode.name = "Buildings"
+		game.add_child.call_deferred(buildingsNode)
+	buildingsNode.y_sort_enabled = true
+	buildingsNode.z_index = ZLayers.MACHINE
 	
 	var path := "res://objects/machines/"
 	if DirAccess.dir_exists_absolute(path):
@@ -119,7 +131,7 @@ func place_building_at(building_data, cell: Vector2i, dir: Vector2 = Vector2.RIG
 		newBuilding.visualComponent.set_sprite()
 		newBuilding.visualComponent.set_pos()
 	
-	game.add_child(newBuilding)
+	buildingsNode.add_child(newBuilding)
 	grid[cell] = newBuilding
 
 func erase_building_at(cell: Vector2i) -> void:
@@ -131,9 +143,16 @@ func erase_building_at(cell: Vector2i) -> void:
 		grid.erase(cell)
 
 func place_belt_at(cell: Vector2i, cell1: Vector2i) -> void:
-	erase_building_at(cell)
-	erase_belt_at(cell)
-	erase_belt_at(cell1)
+	# Clear EVERY cell the belt will cover, not just the ends — otherwise
+	# machines under the middle of the belt get orphaned ("ghosts").
+	var step := Vector2i(signi(cell1.x - cell.x), signi(cell1.y - cell.y))
+	var c := cell
+	while true:
+		erase_belt_at(c)
+		erase_building_at(c)
+		if c == cell1 or step == Vector2i.ZERO:
+			break
+		c += step
 	
 	var newBelt := beltScene.instantiate()
 	if "cell" in newBelt:
@@ -142,8 +161,8 @@ func place_belt_at(cell: Vector2i, cell1: Vector2i) -> void:
 		newBelt.cell1 = cell1
 	if "buildingResource" in newBelt and buildingResources.has(BuildingTypes.Type.BELT):
 		newBelt.buildingResource = buildingResources[BuildingTypes.Type.BELT]
-	newBelt.add_slots()
-	
+
+	newBelt.z_index = ZLayers.BELT
 	game.add_child(newBelt)
 	grid[cell] = newBelt
 	print("Placed belt spanning from ", cell, " to ", cell1)
@@ -164,7 +183,8 @@ func erase_belt_at(cell: Vector2i) -> void:
 			cellsToRemove.append(belt.cell)
 		
 		for key: Vector2i in grid.keys():
-			if grid[key] == belt or cellsToRemove.has(key):
+			# Only remove entries that ARE this belt; never drop another building's entry.
+			if grid[key] == belt:
 				grid.erase(key)
 		
 		belt.queue_free()

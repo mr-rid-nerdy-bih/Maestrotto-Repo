@@ -1,48 +1,46 @@
 extends Node2D
+## Draws one Line2D per link. `links` is filled by LinkingComponent:
+## key = source building's cell, value = {source, target, from, to, endBuildingType, ...}
 
-var links :=  {}
-var linkLines :=  {}
+var links := {}
+var linkLines := {}
 
 func _process(_delta: float) -> void:
 	var halfCell := Vector2(GridManager.CELL_SIZE, GridManager.CELL_SIZE) / 2.0
-	
-	for cell: Vector2i in links:
-		var cell1: Vector2i = links[cell]["to"]
-		var fromPos := GridManager.get_global_at(cell) + halfCell
-		var toPos := GridManager.get_global_at(cell1) + halfCell
-		var type: BuildingTypes.Type = links[cell]["endBuildingType"]
-		
-		if not linkLines.has(cell):
-			var line := Line2D.new()
+
+	# 1. Drop links whose buildings are gone or no longer linked to each other.
+	for key in links.keys():
+		var link: Dictionary = links[key]
+		var source = link.get("source")
+		var target = link.get("target")
+		if not (is_instance_valid(source) and is_instance_valid(target)) \
+				or source.transportComponent.toTransport != target:
+			links.erase(key)
+
+	# 2. Remove lines that no longer have a link.
+	for key in linkLines.keys():
+		if not links.has(key):
+			linkLines[key].queue_free()
+			linkLines.erase(key)
+
+	# 3. Create / update a line for every link.
+	for key in links:
+		var link: Dictionary = links[key]
+		var line: Line2D = linkLines.get(key)
+		if line == null:
+			line = Line2D.new()
 			line.width = 2.0
-			
-			line.default_color = Color.RED
-			match type:
-				BuildingTypes.Type.PACKAGER: line.default_color = Color.GREEN
-				BuildingTypes.Type.CHUTE: line.default_color = Color.ORANGE
-			
-			line.z_index = 20
-			line.add_point(fromPos)
-			line.add_point(toPos)
+			line.z_index = ZLayers.LINK_LINE
+			line.add_point(Vector2.ZERO)
+			line.add_point(Vector2.ZERO)
 			add_child(line)
-			linkLines[cell] = line
-		else:
-			var line: Line2D = linkLines[cell]
-			line.set_point_position(0, fromPos)
-			line.set_point_position(1, toPos)
-	
-	for cell: Vector2i in linkLines.keys():
-		if not links.has(cell):
-			linkLines[cell].queue_free()
-			linkLines.erase(cell)
-			return
-		
-		var cell1: Vector2i = links[cell]["to"]
-		var fromBuilding: Building
-		var toBuilding: Building
-		
-		fromBuilding = GridManager.get_building_at(cell)
-		toBuilding = GridManager.get_building_at(cell1)
-		
-		if not (fromBuilding and toBuilding):
-			links.erase(cell)
+			linkLines[key] = line
+		line.default_color = _color_for(link["endBuildingType"])
+		line.set_point_position(0, GridManager.get_global_at(link["from"]) + halfCell)
+		line.set_point_position(1, GridManager.get_global_at(link["to"]) + halfCell)
+
+func _color_for(type: BuildingTypes.Type) -> Color:
+	match type:
+		BuildingTypes.Type.PACKAGER: return Color.GREEN
+		BuildingTypes.Type.CHUTE: return Color.ORANGE
+	return Color.RED

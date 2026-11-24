@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="BuildingResource" format=3 uid="uid://f7ypext1wed3"]
 
 [ext_resource type="Script" uid="uid://bkwei1vxbbh7m" path="res://helpers/recipe_resource.gd" id="1_okspr"]
+[ext_resource type="Script" uid="uid://cvbvt8vilk5ip" path="res://helpers/input_slot.gd" id="1_xvi4d"]
 [ext_resource type="Script" uid="uid://clfio2dyahcm3" path="res://helpers/building_resource.gd" id="2_okspr"]
 [ext_resource type="Texture2D" uid="uid://uofrtowrsmvg" path="res://assets/chute.png" id="3_okspr"]
 

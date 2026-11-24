@@ -14,7 +14,7 @@ metadata/_custom_type_script = "uid://cvbvt8vilk5ip"
 
 [sub_resource type="Resource" id="Resource_c02i5"]
 script = ExtResource("2_4fpfv")
-requiredItems = Array[ExtResource("3_vwuwq")]([ExtResource("5_sq7yl")])
+requiredItems = Array[ExtResource("3_vwuwq")]([])
 outputItems = Array[ExtResource("3_vwuwq")]([ExtResource("2_c02i5")])
 metadata/_custom_type_script = "uid://bkwei1vxbbh7m"
 

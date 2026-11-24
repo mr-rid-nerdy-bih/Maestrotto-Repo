@@ -1,4 +1,9 @@
 extends Building
+## A belt is just a Building whose input slot is "the items currently riding
+## on it". Items move along the line every frame; when the front item reaches
+## the end it is handed to the linked building with transportComponent.send().
+
+const Side := InventoryComponent.Side
 
 @export var line2D: Line2D
 @export var speed: float = 20.0
@@ -18,22 +23,30 @@ var isPreview: bool = false
 
 func _ready() -> void:
 	if not line2D:
-		line2D = get_node_or_null("line2D")
-	
+		line2D = get_node_or_null("Line2D")
+
 	if visualComponent:
 		visualComponent.cell = cell
 		if visualComponent.isPreview or isPreview:
 			_setup_preview()
 			return
-	
+
+	_sync_resource()
 	type = buildingResource.buildingType
-	
-	inventoryComponent.add_input_cell(Vector2i(0, 0), anyItemResource)
-	inventoryComponent.add_output_cell(cell1 - cell, anyItemResource)
-	
+	inventoryComponent.setup()
+
 	_setup_points()
+	_fit_capacity_to_length()
 	set_inbetweens()
 	draw_on_grid()
+
+## A belt's capacity is however many items physically fit on it,
+## not the generic maxInput (which capped every belt at 10).
+func _fit_capacity_to_length() -> void:
+	var length := _start_pos().distance_to(_end_pos())
+	var fits := int(length / itemSpacing) + 1
+	for slot: InventorySlot in inventoryComponent.inputSlots:
+		slot.capacity = fits
 
 func _setup_preview() -> void:
 	var sprite: Sprite2D = Sprite2D.new()
@@ -62,37 +75,31 @@ func get_coords() -> Vector2i:
 	var rotDeg := rad_to_deg(get_rot())
 	var normalizedRot := int(round(fposmod(rotDeg, 360.0))) % 360
 	var y := 0
-	
+
 	match normalizedRot:
 		0: y = 0
 		90: y = 2
 		180: y = 1
 		270: y = 3
-	
+
 	return Vector2i(0, y)
 
 func set_inbetweens() -> void:
 	belts.clear()
-	if !cell or !cell1:
-		for entry in belts:
-			beltLayer.erase_cell(entry["cell"])
-		GridManager.beltNodes.erase(self)
-		print("Erased belt containing cell: ", cell, ". Cell or Cell1 was null.")
-		queue_free()
-	
+
 	var rotDeg := rad_to_deg(get_rot())
 	var normalizedRot := int(round(fposmod(rotDeg, 360.0))) % 360
 	var dir := Vector2i.ZERO
-	
+
 	match normalizedRot:
 		0: dir.x = 1
 		90: dir.y = 1
 		180: dir.x = -1
 		270: dir.y = -1
-	
+
 	var count: int = abs(cell1.x - cell.x) + abs(cell1.y - cell.y)
 	var atlasCoords := get_coords()
-	
+
 	for i in range(count + 1):
 		belts.append({"cell": cell + dir * i, "rotation": atlasCoords})
 
@@ -100,63 +107,52 @@ func draw_on_grid() -> void:
 	for b in belts:
 		GridManager.beltLayer.set_cell(b.cell, 1, b.rotation)
 
-func child_items() -> void:
-	if not inventoryComponent or not line2D or line2D.get_point_count() < 2:
-		return
-	if inventoryComponent.inputCells.size() == 0: add_slots()
-	for item: Item in inventoryComponent.inputCells[0].inventory:
-		if is_instance_valid(item) and item.get_parent() == null:
-			item.global_position = line2D.get_point_position(0)
-			item.z_index = 10
-			game.add_child(item)
-
+# Belts move items in _process (smooth), not on the tick.
 func _on_tick() -> void:
 	pass
 
-func _process(delta: float) -> void:
-	if isPreview: return
-	
-	var input: Array = inventoryComponent.inputInventory
-	var pos0: Vector2 = line2D.get_point_position(0)
-	var pos1: Vector2 = line2D.get_point_position(1)
-	
-	child_items()
-	
-	canInput = true
-	if input.size() != 0:
-		if pos0.distance_to(input[input.size() - 1].global_position) < itemSpacing:
-			canInput = false
-	
-	var distanceDivision: float = pos0.distance_to(pos1)
-	if distanceDivision <= 0.0:
-		distanceDivision = GridManager.CELL_SIZE
-	
-	for i in range(input.size() - 1, -1, -1):
-		var currentItem: Item = input[i]
-		if not is_instance_valid(currentItem):
-			input.remove_at(i)
-			continue
-			
-		if i != 0 and is_instance_valid(input[i - 1]):
-			var distanceToNext := currentItem.global_position.distance_to(input[i - 1].global_position)
-			if distanceToNext < itemSpacing:
-				continue
-		
-		currentItem.global_position = lerp(pos0, pos1, clampf(currentItem.currentLerp, 0.0, 1.0))
-		
-		if currentItem.currentLerp < 1.0:
-			@warning_ignore("narrowing_conversion")
-			currentItem.currentLerp += (speed * delta) / distanceDivision
-		else:
-			if is_instance_valid(transportComponent.toTransport) and transportComponent.toTransport.inventoryComponent.inputInventory.size() < transportComponent.toTransport.buildingResource.maxInput:
-				if currentItem.get_parent() != null:
-					currentItem.get_parent().remove_child(currentItem)
-				
-				currentItem.currentLerp = 0
-				inventoryComponent.outputCells[0].outputInventory.append(currentItem)
-				inventoryComponent.inputCells[0].inputInventory.remove_at(i)
-				transportComponent.transport_to()
+# --- Transport hooks -------------------------------------------------------
 
-func add_slots() -> void:
-	inventoryComponent.add_input_cell(Vector2i(0, 0), anyItemResource)
-	inventoryComponent.add_output_cell(cell1 - cell, anyItemResource)
+func can_receive_item(_item: Item) -> bool:
+	return canInput
+
+func on_item_received(item: Item) -> void:
+	item.currentLerp = 0.0
+	item.z_index = ZLayers.ITEM
+	add_child(item) # child of the belt -> freed automatically when the belt is erased
+	item.global_position = _start_pos()
+
+# --- Movement --------------------------------------------------------------
+
+func _start_pos() -> Vector2:
+	return line2D.to_global(line2D.get_point_position(0))
+
+func _end_pos() -> Vector2:
+	return line2D.to_global(line2D.get_point_position(1))
+
+func _process(_delta: float) -> void:
+	if isPreview or not line2D or line2D.get_point_count() < 2:
+		return
+
+	var start := _start_pos()
+	var end := _end_pos()
+	var length := maxf(start.distance_to(end), 1.0)
+	var spacing := itemSpacing / length # spacing measured in "lerp units"
+	var step := speed * _delta / length
+
+	# Index 0 is the front item (oldest). Each item may move up to the item ahead.
+	var items := inventoryComponent.get_items(Side.INPUT)
+	for i in items.size():
+		var item := items[i]
+		var limit := 1.0 if i == 0 else items[i - 1].currentLerp - spacing
+		item.currentLerp = clampf(item.currentLerp + step, item.currentLerp, maxf(limit, item.currentLerp))
+		item.global_position = start.lerp(end, clampf(item.currentLerp, 0.0, 1.0))
+
+	# Front item at the end -> try to hand it off. If the target is full it
+	# just waits there and the items behind it queue up.
+	if not items.is_empty() and items[0].currentLerp >= 1.0:
+		if transportComponent.send(items[0], Side.INPUT):
+			items.remove_at(0)
+
+	# Only accept a new item once the newest one has moved out of the way.
+	canInput = items.is_empty() or items[-1].currentLerp >= spacing

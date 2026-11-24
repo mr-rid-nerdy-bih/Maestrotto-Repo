@@ -1,120 +1,146 @@
 class_name InventoryComponent
 extends Node2D
+## Owns every item a building holds. Nothing else should touch the slot
+## arrays directly — go through insert / remove / get_items / consume.
 
-var inputInventory: Array[Item] = []
-var outputInventory: Array[Item] = []
-
-var inputCells: Array[Dictionary] = []
-var outputCells: Array[Dictionary] = []
-var additionalInputCells: Array[ItemSlot] = []
-var additionalOutputCells: Array[ItemSlot] = []
+enum Side { INPUT, OUTPUT }
 
 var buildingResource: BuildingResource
 
-func ready_input_cells() -> void:
-	push_warning("ready_input_cells called on ", get_parent(), " with existing inputCells: ", inputCells)
-	inputCells.clear()
-	outputCells.clear()
-	
-	var inputs: Array[ItemSlot] = []
-	var outputs: Array[ItemSlot] = []
-	
-	if buildingResource:
-		inputs.append_array(buildingResource.inputCells)
-		outputs.append_array(buildingResource.outputCells)
-	inputs.append_array(additionalInputCells)
-	outputs.append_array(additionalOutputCells)
-	
-	for slot: ItemSlot in inputs:
-		if slot == null:
-			continue
-		inputCells.append({
-			"cell": slot.cell,
-			"item": slot.item,
-			"inventory": [] as Array[Item],
-		})
-	
-	for slot: ItemSlot in outputs:
-		if slot == null:
-			continue
-		outputCells.append({
-			"cell": slot.cell,
-			"item": slot.item,
-			"inventory": [] as Array[Item],
-		})
+var inputSlots: Array[InventorySlot] = []
+var outputSlots: Array[InventorySlot] = []
 
-func add_input_cell(cell: Vector2i, item: ItemResource) -> void:
-	var newSlot: ItemSlot = ItemSlot.new()
-	newSlot.cell = cell
-	newSlot.item = item
-	additionalInputCells.append(newSlot)
-	
-	ready_input_cells()
+## Builds the runtime slots from the BuildingResource. Safe to call again.
+## A building with no slots configured gets one "accept anything" slot per side,
+## so simple pass-through buildings (chute, canister, belt) work with zero setup.
+func setup() -> void:
+	var maxIn := buildingResource.maxInput if buildingResource else 10
+	var maxOut := buildingResource.maxOutput if buildingResource else 10
+	var inDefs: Array[ItemSlot] = buildingResource.inputCells if buildingResource else ([] as Array[ItemSlot])
+	var outDefs: Array[ItemSlot] = buildingResource.outputCells if buildingResource else ([] as Array[ItemSlot])
+	inputSlots = _make_slots(inDefs, maxIn)
+	outputSlots = _make_slots(outDefs, maxOut)
 
-func add_output_cell(cell: Vector2i, item: ItemResource) -> void:
-	var newSlot: ItemSlot = ItemSlot.new()
-	newSlot.cell = cell
-	newSlot.item = item
-	additionalOutputCells.append(newSlot)
+func _make_slots(defs: Array[ItemSlot], capacity: int) -> Array[InventorySlot]:
+	var result: Array[InventorySlot] = []
+	for def: ItemSlot in defs:
+		if def != null:
+			result.append(InventorySlot.new(def.cell, def.item, capacity))
+	if result.is_empty():
+		result.append(InventorySlot.new(Vector2i.ZERO, null, capacity))
+	return result
 
-func get_total_count(target: ItemResource) -> int:
-	if target == null:
-		return 0
+func _slots(side: int) -> Array[InventorySlot]:
+	return inputSlots if side == Side.INPUT else outputSlots
+
+# --- Insert / remove -------------------------------------------------------
+
+func can_insert(res: ItemResource, side: int) -> bool:
+	for slot: InventorySlot in _slots(side):
+		if slot.accepts(res):
+			return true
+	return false
+
+func insert(item: Item, side: int) -> bool:
+	if not is_instance_valid(item):
+		return false
+	for slot: InventorySlot in _slots(side):
+		if slot.accepts(item.itemResource):
+			slot.items.append(item)
+			return true
+	return false
+
+func remove(item: Item, side: int) -> bool:
+	for slot: InventorySlot in _slots(side):
+		var idx := slot.items.find(item)
+		if idx != -1:
+			slot.items.remove_at(idx)
+			return true
+	return false
+
+## Returns a *copy* (oldest first), so callers can remove items while looping.
+func get_items(side: int) -> Array[Item]:
+	var result: Array[Item] = []
+	for slot: InventorySlot in _slots(side):
+		slot.prune_invalid()
+		result.append_array(slot.items)
+	return result
+
+func is_empty(side: int) -> bool:
+	return get_items(side).is_empty()
+
+# --- Recipe helpers (input side) ------------------------------------------
+
+func count(res: ItemResource) -> int:
 	var total := 0
-	for slot: Dictionary in inputCells:
-		var slot_inv: Array = slot.get("inventory", [])
-		for item: Item in slot_inv:
-			if item.itemResource == target:
-				total += 1
-	for item in inputInventory:
-		if item.itemResource == target:
+	for item: Item in get_items(Side.INPUT):
+		if res == null or res.is_wildcard() or item.itemResource == res:
 			total += 1
 	return total
 
-func consume_item_resource(target: ItemResource, amount: int = 1) -> bool:
-	if target == null or amount <= 0:
-		return true
-	if get_total_count(target) < amount:
-		return false
-	
-	var remaining := amount
-	for slot: Dictionary in inputCells:
-		var slot_inv: Array = slot.get("inventory", [])
-		for i in range(slot_inv.size() - 1, -1, -1):
-			if remaining <= 0:
-				break
-			var item: Item = slot_inv[i]
-			if item.itemResource == target:
-				slot_inv.remove_at(i)
-				item.queue_free()
-				remaining -= 1
-	
-	for i in range(inputInventory.size() - 1, -1, -1):
-		if remaining <= 0:
-			break
-		var item: Item = inputInventory[i]
-		if item.itemResource == target:
-			inputInventory.remove_at(i)
-			item.queue_free()
-			remaining -= 1
-	
-	return remaining == 0
-
-func has_items(requiredItems: Array) -> bool:
-	if requiredItems.is_empty():
-		return true
-	
-	var neededCounts: Dictionary = {}
-	for entry: ItemResource in requiredItems:
-		if entry.any == "None" or entry.itemName.to_lower() == "none":
+## True if the input side can satisfy a recipe's requirement list.
+## "Nothing" entries are ignored, wildcard entries take any leftover item.
+func has_items(required: Array[ItemResource]) -> bool:
+	var specific: Dictionary[ItemResource, int] = {}
+	var wildcards := 0
+	for res: ItemResource in required:
+		if res == null or res.is_nothing():
 			continue
-		neededCounts[entry] = neededCounts.get(entry, 0) + 1
-	
-	if neededCounts.is_empty():
-		return true
-	
-	for item: ItemResource in neededCounts.keys():
-		if get_total_count(item) < neededCounts[item]:
+		if res.is_wildcard():
+			wildcards += 1
+		else:
+			specific[res] = specific.get(res, 0) + 1
+
+	var specificTotal := 0
+	for res: ItemResource in specific:
+		if count(res) < specific[res]:
 			return false
-	
-	return true
+		specificTotal += specific[res]
+	return get_items(Side.INPUT).size() >= specificTotal + wildcards
+
+## Removes and frees the required items. Call has_items() first.
+func consume(required: Array[ItemResource]) -> void:
+	var wildcards := 0
+	for res: ItemResource in required:
+		if res == null or res.is_nothing():
+			continue
+		if res.is_wildcard():
+			wildcards += 1
+			continue
+		for item: Item in get_items(Side.INPUT):
+			if item.itemResource == res:
+				_destroy(item)
+				break
+	for i in wildcards:
+		var left := get_items(Side.INPUT)
+		if left.is_empty():
+			break
+		_destroy(left[0])
+
+func _destroy(item: Item) -> void:
+	remove(item, Side.INPUT)
+	item.queue_free()
+
+# --- Cleanup / debug -------------------------------------------------------
+
+## Items sitting inside a machine are not in the scene tree, so Godot would
+## never free them. Free them ourselves when the building is deleted.
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_PREDELETE:
+		return
+	for slot: InventorySlot in inputSlots + outputSlots:
+		for item: Item in slot.items:
+			if is_instance_valid(item) and item.get_parent() == null:
+				item.free()
+
+func debug_string() -> String:
+	return "in: %d %s | out: %d %s" % [
+		get_items(Side.INPUT).size(), _names(Side.INPUT),
+		get_items(Side.OUTPUT).size(), _names(Side.OUTPUT),
+	]
+
+func _names(side: int) -> Array[String]:
+	var names: Array[String] = []
+	for item: Item in get_items(side):
+		names.append(item.itemResource.itemName if item.itemResource else "?")
+	return names

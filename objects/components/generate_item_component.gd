@@ -1,6 +1,8 @@
 class_name GenerateItemComponent
 extends Node2D
 
+const Side := InventoryComponent.Side
+
 @onready var itemScene: PackedScene = preload("uid://cydebobvt4np8")
 
 @export var inventoryComponent: InventoryComponent
@@ -15,49 +17,36 @@ func generate() -> void:
 		return
 	if craftComponent == null or inventoryComponent == null:
 		return
-	
-	var recipeResults: Dictionary = craftComponent.check_crafts()
-	var required: Array = recipeResults.get("requiredItems", [])
-	var output: Array = recipeResults.get("outputItems", [])
-	if required == null:
-		required = []
-	if output == null or output.is_empty():
+
+	var recipe := craftComponent.find_craftable_recipe()
+	if recipe == null:
 		return
-	
-	if currentCooldown < buildingResource.cooldown:
+
+	if currentCooldown < buildingResource.cooldown * recipe.cooldownMult:
 		currentCooldown += 1.0
 		return
-	
-	if not inventoryComponent.has_items(required):
+
+	# Check for room BEFORE consuming, so a full machine never eats its inputs.
+	if not _has_room_for(recipe.outputItems):
 		return
-	
-	if not _consume_required_items(required):
-		return
-	
-	var newItems: Array[Item] = makeItem(output)
-	for newItem: Item in newItems:
-		var accepted: bool = transportComponent.move_into_inventory(newItem, true)
-		print(accepted)
-		if !accepted: newItem.queue_free()
-	
+
+	inventoryComponent.consume(recipe.requiredItems)
+	for res: ItemResource in recipe.outputItems:
+		if res == null or res.is_nothing():
+			continue
+		inventoryComponent.insert(make_item(res), Side.OUTPUT)
+
 	currentCooldown = 0.0
 
-func _consume_required_items(required: Array) -> bool:
-	for req: ItemResource in required:
-		var item_res := req as ItemResource
-		if item_res.any == "None" or item_res.itemName.to_lower() == "none":
-			continue
-		if not inventoryComponent.consume_item_resource(item_res, 1):
+func _has_room_for(outputs: Array[ItemResource]) -> bool:
+	# Good enough for 1-item outputs; multi-output recipes into one slot
+	# would need a proper "free space" count.
+	for res: ItemResource in outputs:
+		if res and not res.is_nothing() and not inventoryComponent.can_insert(res, Side.OUTPUT):
 			return false
 	return true
 
-func makeItem(items: Array) -> Array[Item]:
-	var returnItems: Array[Item] = []
-	for entry: ItemResource in items:
-		var item_res := entry as ItemResource
-		if item_res.any == "None" or item_res.itemName.to_lower() == "none":
-			continue
-		var newItem: Item = itemScene.instantiate()
-		newItem.itemResource = item_res
-		returnItems.append(newItem)
-	return returnItems
+func make_item(res: ItemResource) -> Item:
+	var newItem: Item = itemScene.instantiate()
+	newItem.itemResource = res
+	return newItem

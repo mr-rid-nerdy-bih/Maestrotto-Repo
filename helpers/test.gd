@@ -10,7 +10,7 @@ var enumValues := BuildingTypes.Type.values()
 
 func _ready() -> void:
 	beltGroup.top_level = true
-	z_index = 41
+	z_index = ZLayers.PREVIEW
 	
 	changePreview(null, true)
 
