@@ -264,7 +264,7 @@ func link_func(event: InputEvent) -> void:
 		return
 	
 	if linkingBuilding:
-		if hasBuilding:
+		if hasBuilding or hasBelt:
 			if linkingBuilding is Building:
 				var transport: TransportComponent = linkingBuilding.transportComponent
 				var linkedCells := transport.get_cells_linked_to(buildingAtCell)

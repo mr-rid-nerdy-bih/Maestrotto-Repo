@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="BuildingResource" format=3 uid="uid://b8s270whn4s5r"]
+
+[ext_resource type="Script" uid="uid://cvbvt8vilk5ip" path="res://helpers/input_slot.gd" id="1_ivy3j"]
+[ext_resource type="Script" uid="uid://bkwei1vxbbh7m" path="res://helpers/recipe_resource.gd" id="2_jiao3"]
+[ext_resource type="Script" uid="uid://clfio2dyahcm3" path="res://helpers/building_resource.gd" id="3_oarha"]
+
+[resource]
+script = ExtResource("3_oarha")
+metadata/_custom_type_script = "uid://clfio2dyahcm3"

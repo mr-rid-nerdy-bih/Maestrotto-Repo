@@ -58,7 +58,10 @@ func _ready() -> void:
 func on_tick() -> void:
 	if not isActive or not buildingResource:
 		return
-
+	
+	if buildingResource.customBehavior:
+		buildingResource.custom_behavior(self)
+	
 	if visualComponent:
 		visualComponent.animate()
 	if buildingResource.canGenerate and generateComponent:
