@@ -1,6 +1,6 @@
 extends Node2D
 ## Draws one Line2D per link. `links` is filled by LinkingComponent:
-## key = source building's cell, value = {source, target, from, to, endBuildingType, ...}
+## key = "sourceCell|outputCell", value = {source, target, outputCell, from, to, endBuildingType, ...}
 
 var links := {}
 var linkLines := {}
@@ -20,7 +20,7 @@ func _process(_delta: float) -> void:
 		var source = link.get("source")
 		var target = link.get("target")
 		if not (is_instance_valid(source) and is_instance_valid(target)) \
-				or source.transportComponent.toTransport != target:
+				or source.transportComponent.get_target(link["outputCell"]) != target:
 			links.erase(key)
 
 	# Remove lines that no longer have a link.

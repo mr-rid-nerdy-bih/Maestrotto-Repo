@@ -81,7 +81,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if hasBuilding:
 			print("Building type: ", buildingAtCell.type)
 			print(buildingAtCell.inventoryComponent.debug_string())
-			print("Linked to: ", buildingAtCell.transportComponent.toTransport)
+			print("Linked to (output cell -> building): ", buildingAtCell.transportComponent.toTransport)
 
 ## Cells (and rotations) for a belt from [param start] to [param end].
 ## An L-shaped drag is split into two segments at cornerCell.
@@ -266,15 +266,19 @@ func link_func(event: InputEvent) -> void:
 	if linkingBuilding:
 		if hasBuilding or hasBelt:
 			if linkingBuilding is Building:
-				if linkingBuilding.transportComponent.toTransport == buildingAtCell:
-					linkingBuilding.link_to_building(null)
+				var transport: TransportComponent = linkingBuilding.transportComponent
+				var linkedCells := transport.get_cells_linked_to(buildingAtCell)
+				if not linkedCells.is_empty():
+					for outputCell: Vector2i in linkedCells:
+						linkingBuilding.link_to_building(null, outputCell)
 					linkingBuilding = null
 					print("unlink")
 					return
 				
 				if buildingAtCell.buildingResource.buildingType in linkingBuilding.buildingResource.validOutputBuildings:
-					linkingBuilding.link_to_building(buildingAtCell)
-					print("Linked building ", linkingBuilding, " with building ", buildingAtCell, " at ", cell)
+					var outputCell := pick_output_cell(linkingBuilding, buildingAtCell)
+					linkingBuilding.link_to_building(buildingAtCell, outputCell)
+					print("Linked building ", linkingBuilding, " output cell ", outputCell, " with building ", buildingAtCell, " at ", cell)
 					linkingBuilding = null
 					return
 		if linkingBuilding: print("Not able to link this building.")
@@ -283,3 +287,25 @@ func link_func(event: InputEvent) -> void:
 		if hasBuilding or hasBelt:
 			linkingBuilding = buildingAtCell
 			print("Linking object ", buildingAtCell, " at ", cell)
+
+## Which output cell of [param source] a new link to [param target] uses:
+## the unlinked output cell nearest the target, or if every cell is already
+## linked, the nearest one overall (its old link is replaced).
+func pick_output_cell(source: Building, target: Building) -> Vector2i:
+	var transport: TransportComponent = source.transportComponent
+	var candidates: Array[Vector2i] = []
+	for outputCell: Vector2i in transport.get_output_cells():
+		if transport.get_target(outputCell) == null:
+			candidates.append(outputCell)
+	if candidates.is_empty():
+		candidates = transport.get_output_cells()
+
+	var targetCell: Vector2i = target.visualComponent.cell
+	var best: Vector2i = candidates[0]
+	var bestDist := INF
+	for outputCell: Vector2i in candidates:
+		var dist := Vector2(source.visualComponent.cell + outputCell).distance_squared_to(Vector2(targetCell))
+		if dist < bestDist:
+			bestDist = dist
+			best = outputCell
+	return best
