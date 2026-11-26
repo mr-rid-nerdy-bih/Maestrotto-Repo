@@ -10,4 +10,5 @@ enum Type {
 	BELT = 3,
 	CHUTE = 4,
 	COPPER_CANISTER = 5,
+	PITCH_FACTORY = 6,
 }

@@ -58,16 +58,16 @@ func _ready() -> void:
 func on_tick() -> void:
 	if not isActive or not buildingResource:
 		return
-
+	
+	if buildingResource.customBehavior:
+		buildingResource.custom_behavior(self)
+	
 	if visualComponent:
 		visualComponent.animate()
 	if buildingResource.canGenerate and generateComponent:
 		generateComponent.generate()
 	if transportComponent:
 		transportComponent.transport_to()
-
-	if not buildingResource.customBehaviorUsesProcess:
-		buildingResource.custom_behavior(self)
 
 ## Sends this building's output to [param building]. Pass null to unlink.
 func link_to_building(building: Building) -> void:

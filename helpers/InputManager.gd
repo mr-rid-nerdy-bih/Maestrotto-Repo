@@ -264,7 +264,7 @@ func link_func(event: InputEvent) -> void:
 		return
 	
 	if linkingBuilding:
-		if hasBuilding:
+		if hasBuilding or hasBelt:
 			if linkingBuilding is Building:
 				if linkingBuilding.transportComponent.toTransport == buildingAtCell:
 					linkingBuilding.link_to_building(null)
