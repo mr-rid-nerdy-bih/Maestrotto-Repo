@@ -39,6 +39,7 @@ func generate() -> void:
 		if res == null or res.is_nothing():
 			continue
 		var newItem := make_item(res)
+		apply_notation(newItem, recipe.outputNotation)
 		# has_room_for() checks each output on its own, so a recipe with
 		# several outputs can still overflow a slot. The item was never added
 		# to the tree, so free it here or it leaks.
@@ -55,6 +56,13 @@ func has_room_for(outputs: Array[ItemResource]) -> bool:
 		if res and not res.is_nothing() and not inventoryComponent.can_insert(res, Side.OUTPUT):
 			return false
 	return true
+
+## Copies [param notation] onto [param item]'s data. Resources are duplicated
+## so changing one item's notation later never changes the recipe or other items.
+func apply_notation(item: Item, notation: Dictionary[String, Resource]) -> void:
+	for key: String in notation:
+		var value: Resource = notation[key]
+		item.data[key] = value.duplicate() if value else null
 
 ## Creates a new Item node of type [param res] (not added to the tree).
 func make_item(res: ItemResource) -> Item:

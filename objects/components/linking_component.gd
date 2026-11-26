@@ -15,6 +15,7 @@ func set_link_at_link_group() -> void:
 
 	# Drop this building's old entries, then add one per current link, so
 	# unlinking or re-linking an output cell moves or removes its line.
+	@warning_ignore("untyped_declaration")
 	for key in links.links.keys():
 		if links.links[key].get("source") == source:
 			links.links.erase(key)

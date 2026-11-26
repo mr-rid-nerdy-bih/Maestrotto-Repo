@@ -237,7 +237,7 @@ func place_building_at_current_cell() -> void:
 	var currentBuilding: Dictionary = preview.get_current_building()
 	var currentBuildingType: BuildingTypes.Type = currentBuilding.type
 	var currentBuildingDir: Vector2 = currentBuilding.dir
-	if currentBuildingType and not GridManager.has_building_at(cell):
+	if currentBuildingType and GridManager.can_place_building(currentBuildingType, cell):
 		GridManager.place_building_at(currentBuildingType, cell, currentBuildingDir)
 		print("Placed building (", currentBuildingType, ") at ", cell)
 
@@ -264,6 +264,11 @@ func link_func(event: InputEvent) -> void:
 		return
 	
 	if linkingBuilding:
+<<<<<<< Updated upstream
+=======
+		# Belts are only in the grid at their start cell, so hasBelt is what
+		# makes clicking anywhere along a belt work as a target.
+>>>>>>> Stashed changes
 		if hasBuilding or hasBelt:
 			if linkingBuilding is Building:
 				var transport: TransportComponent = linkingBuilding.transportComponent
@@ -277,6 +282,10 @@ func link_func(event: InputEvent) -> void:
 				
 				if buildingAtCell.buildingResource.buildingType in linkingBuilding.buildingResource.validOutputBuildings:
 					var outputCell := pick_output_cell(linkingBuilding, buildingAtCell)
+					if not linkingBuilding.can_link_to(buildingAtCell, outputCell):
+						print("Too far to link (max ", linkingBuilding.buildingResource.maxLinkDistance, " cells).")
+						linkingBuilding = null
+						return
 					linkingBuilding.link_to_building(buildingAtCell, outputCell)
 					print("Linked building ", linkingBuilding, " output cell ", outputCell, " with building ", buildingAtCell, " at ", cell)
 					linkingBuilding = null
@@ -289,8 +298,8 @@ func link_func(event: InputEvent) -> void:
 			print("Linking object ", buildingAtCell, " at ", cell)
 
 ## Which output cell of [param source] a new link to [param target] uses:
-## the unlinked output cell nearest the target, or if every cell is already
-## linked, the nearest one overall (its old link is replaced).
+## the unlinked output cell nearest the target's input cells, or if every
+## cell is already linked, the nearest one overall (its old link is replaced).
 func pick_output_cell(source: Building, target: Building) -> Vector2i:
 	var transport: TransportComponent = source.transportComponent
 	var candidates: Array[Vector2i] = []
@@ -300,11 +309,10 @@ func pick_output_cell(source: Building, target: Building) -> Vector2i:
 	if candidates.is_empty():
 		candidates = transport.get_output_cells()
 
-	var targetCell: Vector2i = target.visualComponent.cell
 	var best: Vector2i = candidates[0]
-	var bestDist := INF
+	var bestDist := 999999
 	for outputCell: Vector2i in candidates:
-		var dist := Vector2(source.visualComponent.cell + outputCell).distance_squared_to(Vector2(targetCell))
+		var dist := source.link_distance_to(target, outputCell)
 		if dist < bestDist:
 			bestDist = dist
 			best = outputCell

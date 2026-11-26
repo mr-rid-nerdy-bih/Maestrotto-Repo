@@ -38,7 +38,6 @@ func _ready() -> void:
 			return
 
 	sync_resource()
-	type = buildingResource.buildingType
 	inventoryComponent.setup()
 
 	setup_points()
@@ -122,6 +121,19 @@ func draw_on_grid() -> void:
 # Belts move items in _process (smooth), not on the tick.
 func on_tick() -> void:
 	pass
+
+# --- Link range ------------------------------------------------------------
+
+func get_origin() -> Vector2i:
+	return cell
+
+## Items only get on at the start of the belt.
+func get_input_world_cells() -> Array[Vector2i]:
+	return [cell]
+
+## Items only get off at the end of the belt.
+func get_output_world_cells(_outputCell: Vector2i = Vector2i.ZERO) -> Array[Vector2i]:
+	return [cell1]
 
 # --- Transport hooks -------------------------------------------------------
 

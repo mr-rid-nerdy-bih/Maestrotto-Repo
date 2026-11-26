@@ -15,21 +15,26 @@ func _process(_delta: float) -> void:
 		visible = false
 	
 	# Drop links whose buildings are gone or no longer linked to each other.
+	@warning_ignore("untyped_declaration")
 	for key in links.keys():
 		var link: Dictionary = links[key]
+		@warning_ignore("untyped_declaration")
 		var source = link.get("source")
+		@warning_ignore("untyped_declaration")
 		var target = link.get("target")
 		if not (is_instance_valid(source) and is_instance_valid(target)) \
 				or source.transportComponent.get_target(link["outputCell"]) != target:
 			links.erase(key)
 
 	# Remove lines that no longer have a link.
+	@warning_ignore("untyped_declaration")
 	for key in linkLines.keys():
 		if not links.has(key):
 			linkLines[key].queue_free()
 			linkLines.erase(key)
 
 	# Create or update a line for every link.
+	@warning_ignore("untyped_declaration")
 	for key in links:
 		var link: Dictionary = links[key]
 		var line: Line2D = linkLines.get(key)

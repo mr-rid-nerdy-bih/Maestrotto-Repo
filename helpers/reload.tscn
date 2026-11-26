@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://dqt5s4oobjpiy"]
+
+[ext_resource type="Script" uid="uid://b4q1sqnfp71uy" path="res://helpers/reload.gd" id="1_588hs"]
+[ext_resource type="Script" uid="uid://dh76f0htcw4f" path="res://helpers/building_types.gd" id="2_n1t5e"]
+
+[node name="Node" type="Node" unique_id=870988483]
+script = ExtResource("1_588hs")
+scripts_to_refresh = Array[Script]([ExtResource("2_n1t5e")])

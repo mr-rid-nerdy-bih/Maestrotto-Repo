@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="BuildingResource" format=3 uid="uid://b8s270whn4s5r"]
+
+[ext_resource type="Script" uid="uid://cvbvt8vilk5ip" path="res://helpers/input_slot.gd" id="1_o7kn2"]
+[ext_resource type="Resource" uid="uid://3qirvryow3up" path="res://objects/items/note.tres" id="2_dvqc3"]
+[ext_resource type="Script" uid="uid://bkwei1vxbbh7m" path="res://helpers/recipe_resource.gd" id="3_vnyiv"]
+[ext_resource type="Script" uid="uid://cpxvtu6cs2fuq" path="res://helpers/item_resource.gd" id="4_78so7"]
+[ext_resource type="Resource" uid="uid://n12wk8o658aq" path="res://objects/items/pitched_note.tres" id="5_nh53b"]
+[ext_resource type="Script" uid="uid://dorhptdxl7lsp" path="res://helpers/notation/pitch_notation.gd" id="6_ok8ek"]
+[ext_resource type="Script" uid="uid://clfio2dyahcm3" path="res://helpers/building_resource.gd" id="7_pt1y0"]
+[ext_resource type="Texture2D" uid="uid://chpup5yy40paa" path="res://assets/pitch_factory.png" id="8_26dg5"]
+
+[sub_resource type="Resource" id="Resource_588hs"]
+script = ExtResource("1_o7kn2")
+item = ExtResource("2_dvqc3")
+metadata/_custom_type_script = "uid://cvbvt8vilk5ip"
+
+[sub_resource type="Resource" id="Resource_c4"]
+script = ExtResource("6_ok8ek")
+metadata/_custom_type_script = "uid://dorhptdxl7lsp"
+
+[sub_resource type="Resource" id="Resource_recipe"]
+script = ExtResource("3_vnyiv")
+requiredItems = Array[ExtResource("4_78so7")]([ExtResource("2_dvqc3")])
+outputItems = Array[ExtResource("4_78so7")]([ExtResource("5_nh53b")])
+outputNotation = Dictionary[String, Resource]({
+"pitch": SubResource("Resource_c4")
+})
+metadata/_custom_type_script = "uid://bkwei1vxbbh7m"
+
+[sub_resource type="Resource" id="Resource_n1t5e"]
+script = ExtResource("1_o7kn2")
+cell = Vector2i(1, 0)
+item = ExtResource("5_nh53b")
+metadata/_custom_type_script = "uid://cvbvt8vilk5ip"
+
+[resource]
+script = ExtResource("7_pt1y0")
+buildingName = "C4 Pitch Factory"
+buildingType = 6
+size = Vector2i(2, 1)
+texture = ExtResource("8_26dg5")
+inputCells = Array[ExtResource("1_o7kn2")]([SubResource("Resource_588hs")])
+outputCells = Array[ExtResource("1_o7kn2")]([SubResource("Resource_n1t5e")])
+validOutputBuildings = Array[int]([3])
+canGenerate = true
+cooldown = 60.0
+itemRecipes = Array[ExtResource("3_vnyiv")]([SubResource("Resource_recipe")])
+metadata/_custom_type_script = "uid://clfio2dyahcm3"

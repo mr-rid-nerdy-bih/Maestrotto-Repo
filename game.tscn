@@ -1,22 +1,11 @@
 [gd_scene format=3 uid="uid://fu36mcowqf1u"]
 
 [ext_resource type="Script" uid="uid://c58ysjf6yc6hv" path="res://helpers/test.gd" id="1_80nbo"]
+[ext_resource type="Script" uid="uid://cihnidfs867hx" path="res://classes/Player/player.gd" id="1_ryrav"]
+[ext_resource type="Texture2D" uid="uid://bvljd8oa5ojek" path="res://assets/player.png" id="2_eow3j"]
 [ext_resource type="Script" uid="uid://cf862ut2hjasl" path="res://helpers/linking_lines.gd" id="3_fc0e3"]
 [ext_resource type="Texture2D" uid="uid://btjal1bg54gjf" path="res://assets/conveyors.png" id="3_feb5d"]
 [ext_resource type="Script" uid="uid://iwnlro6oy8pg" path="res://helpers/cell_outline.gd" id="5_7jktm"]
-
-[sub_resource type="GDScript" id="GDScript_fc0e3"]
-script/source = "extends Node2D
-
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	pass # Replace with function body.
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
-"
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fc0e3"]
 texture = ExtResource("3_feb5d")
@@ -76,11 +65,21 @@ bg_color = Color(0.278, 0.278, 0.278, 0.671)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7jktm"]
 bg_color = Color(0.278, 0.278, 0.278, 0.671)
 
-[node name="Game" type="Node2D" unique_id=1031880535]
-script = SubResource("GDScript_fc0e3")
+[sub_resource type="SpriteFrames" id="SpriteFrames_xrivr"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_eow3j")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
 
-[node name="Camera2D" type="Camera2D" parent="." unique_id=654517079]
-zoom = Vector2(3, 3)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_xrivr"]
+radius = 5.0
+
+[node name="Game" type="Node2D" unique_id=1031880535]
 
 [node name="Timer" type="Timer" parent="." unique_id=1563965587]
 wait_time = 0.05
@@ -155,5 +154,23 @@ script = ExtResource("5_7jktm")
 [node name="Left" type="Line2D" parent="CellOutline" unique_id=837385503]
 
 [node name="Right" type="Line2D" parent="CellOutline" unique_id=1191736955]
+
+[node name="Buildings" type="Node2D" parent="." unique_id=423108316]
+
+[node name="Player" type="CharacterBody2D" parent="Buildings" unique_id=1380884036 node_paths=PackedStringArray("cam", "sprite")]
+script = ExtResource("1_ryrav")
+cam = NodePath("Camera2D")
+sprite = NodePath("AnimatedSprite2D")
+
+[node name="Camera2D" type="Camera2D" parent="Buildings/Player" unique_id=654517079]
+zoom = Vector2(3, 3)
+position_smoothing_enabled = true
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Buildings/Player" unique_id=1105987380]
+sprite_frames = SubResource("SpriteFrames_xrivr")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Buildings/Player" unique_id=55626267]
+position = Vector2(0, 1)
+shape = SubResource("CapsuleShape2D_xrivr")
 
 [connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

@@ -6,10 +6,12 @@ extends Node
 const CELL_SIZE: float = 16.0
 
 @onready var game := get_tree().current_scene
-@onready var cam := game.get_node("Camera2D")
-@onready var beltLayer := game.get_node("TileMapLayer")
+@onready var player: CharacterBody2D = game.find_child("Player")
+@onready var cam: Camera2D = player.get_node("Camera2D")
+@onready var beltLayer: TileMapLayer = game.get_node("TileMapLayer")
 
-## Cell -> Building. Belts are stored only at their start cell.
+## Cell -> Building. Machines are stored on every cell they cover;
+## belts only at their start cell.
 var grid := {}
 var beltNodes: Array = []
 var buildingScene := preload("uid://b3y5h2c174ykj")
@@ -21,7 +23,7 @@ var buildingResources: Dictionary[int, BuildingResource] = {}
 var highlight := false
 var hoveredCell: Vector2i = Vector2i(-1, -1)
 ## Pixel radius around the mouse where buildings fade while highlighting.
-var mouseRange := 50
+var mouseRange := 25
 
 ## Y-sorted container for machines: they draw above belts/items (z band),
 ## and lower rows draw in front of higher rows (y-sort).
@@ -29,6 +31,8 @@ var buildingsNode: Node2D
 
 ## Creates the Buildings container and loads every BuildingResource.
 func _ready() -> void:
+	cam = player.get_node("Camera2D")
+	
 	TimeGlobal.ticked.connect(on_tick)
 
 	buildingsNode = game.get_node_or_null("Buildings")
@@ -127,14 +131,15 @@ func place_building_at(buildingData, cell: Vector2i, dir: Vector2 = Vector2.RIGH
 	if not buildingResources.has(buildingType):
 		push_error("Missing BuildingResource for type: %s" % [buildingType])
 		return
-	
-	erase_building_at(cell)
-	erase_belt_at(cell)
-	
+
+	# Clear every cell the new building will cover.
+	var footprint := get_footprint_cells(cell, buildingResources[buildingType].size)
+	for c: Vector2i in footprint:
+		erase_belt_at(c)
+		erase_building_at(c)
+
 	var newBuilding: Building = buildingScene.instantiate()
 	newBuilding.buildingResource = buildingResources[buildingType]
-	if "type" in newBuilding:
-		newBuilding.type = buildingType
 	if "cell" in newBuilding:
 		newBuilding.cell = cell
 	if "tickBirth" in newBuilding:
@@ -148,16 +153,47 @@ func place_building_at(buildingData, cell: Vector2i, dir: Vector2 = Vector2.RIGH
 		newBuilding.visualComponent.set_pos()
 	
 	buildingsNode.add_child(newBuilding)
-	grid[cell] = newBuilding
+	# Register the building on every cell it covers, so clicking any part of it works.
+	for c: Vector2i in footprint:
+		grid[c] = newBuilding
 
-## Removes the machine on [param cell]. Belts are skipped; use erase_belt_at.
+## Every cell covered by a building of [param size] placed at [param origin].
+func get_footprint_cells(origin: Vector2i, size: Vector2i) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for x in maxi(size.x, 1):
+		for y in maxi(size.y, 1):
+			cells.append(origin + Vector2i(x, y))
+	return cells
+
+## True if a [param buildingType] building at [param cell] wouldn't overlap
+## another machine. Belts don't block; placing over them replaces them.
+func can_place_building(buildingType: BuildingTypes.Type, cell: Vector2i) -> bool:
+	if not buildingResources.has(buildingType):
+		return false
+	for c: Vector2i in get_footprint_cells(cell, buildingResources[buildingType].size):
+		var obj := get_building_at(c)
+		if obj and obj.type != BuildingTypes.Type.BELT:
+			return false
+	return true
+
+## Removes the machine covering [param cell] (all of its cells).
+## Belts are skipped; use erase_belt_at.
 func erase_building_at(cell: Vector2i) -> void:
-	if grid.has(cell):
-		var obj = grid[cell]
-		if is_instance_valid(obj) and obj is Building:
-			if not ("type" in obj and obj.type == BuildingTypes.Type.BELT):
-				obj.queue_free()
+	if not grid.has(cell):
+		return
+	var obj: Variant = grid[cell]
+	if not is_instance_valid(obj) or not obj is Building:
 		grid.erase(cell)
+		return
+	# Leave belts completely alone. Dropping just their grid entry here used
+	# to orphan them (still running, but unfindable), so erase_belt_at
+	# is the only thing that removes a belt.
+	if obj.type == BuildingTypes.Type.BELT:
+		return
+	for key: Vector2i in grid.keys():
+		if grid[key] == obj:
+			grid.erase(key)
+	obj.queue_free()
 
 ## Places a straight belt from [param cell] to [param cell1], clearing
 ## everything along its path first.

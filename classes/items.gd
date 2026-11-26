@@ -12,6 +12,13 @@ var texture: Texture
 var currentLerp: float = 0
 ## Unused for now.
 var canOutput := false
+## This item's notation, e.g. "pitch" -> PitchNotation. Filled in by the
+## recipe that crafted it (see GenerateItemComponent.apply_notation).
+var data: Dictionary
+
+## The notation stored under [param key], or null if this item doesn't have it.
+func get_notation(key: String) -> Resource:
+	return data.get(key)
 
 ## Sets up the sprite from the shared items sheet (10 x 13 frames).
 func _ready() -> void:

@@ -26,4 +26,5 @@ inputCells = Array[ExtResource("1_p5scp")]([SubResource("Resource_o82ow")])
 outputCells = Array[ExtResource("1_p5scp")]([SubResource("Resource_857ue")])
 validOutputBuildings = Array[int]([3])
 passThroughInput = true
+maxLinkInputs = 2
 metadata/_custom_type_script = "uid://clfio2dyahcm3"

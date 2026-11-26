@@ -11,6 +11,6 @@ buildingName = "Chute"
 buildingType = 4
 texture = ExtResource("3_okspr")
 fourDirections = true
-validOutputBuildings = Array[int]([5])
+validOutputBuildings = Array[int]([5, 6])
 passThroughInput = true
 metadata/_custom_type_script = "uid://clfio2dyahcm3"

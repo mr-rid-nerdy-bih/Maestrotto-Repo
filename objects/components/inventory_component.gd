@@ -153,5 +153,9 @@ func debug_string() -> String:
 func item_names(side: int) -> Array[String]:
 	var names: Array[String] = []
 	for item: Item in get_items(side):
-		names.append(item.itemResource.itemName if item.itemResource else "?")
+		var itemName := item.itemResource.itemName if item.itemResource else "?"
+		# Show notation too, e.g. "Pitched Note {pitch: C4}".
+		if not item.data.is_empty():
+			itemName += " " + str(item.data)
+		names.append(itemName)
 	return names

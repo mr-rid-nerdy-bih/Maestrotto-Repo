@@ -10,12 +10,21 @@ const Side := InventoryComponent.Side
 @export var visualComponent: VisualComponent
 var buildingResource: BuildingResource
 
+## In transport_to, cooldown value will go up until it can transport. Usually just 4 ticks or
+var transportCooldown: int = 0
+
 ## Where each output cell sends its items: output slot cell -> target Building.
 ## Buildings with no outputCells configured (and belts) use Vector2i.ZERO.
 var toTransport: Dictionary[Vector2i, Building] = {}
+## How many links feed INTO this building (updated on the receiver by set_target).
+var inputs: int = 0
 
 ## Called once per tick by Building.
 func transport_to() -> void:
+	if transportCooldown <= 4:
+		transportCooldown += 1
+		return
+	
 	prune_targets()
 	if buildingResource and buildingResource.passThroughInput:
 		pass_through()
@@ -36,10 +45,18 @@ func get_target(outputCell: Vector2i = Vector2i.ZERO) -> Building:
 
 ## Links [param outputCell] to [param building]. Pass null to unlink it.
 func set_target(outputCell: Vector2i, building: Building) -> void:
+	# The count lives on the receiver, so change the old and new targets' counts.
+	var oldTarget := get_target(outputCell)
+	if oldTarget == building:
+		return
+	if oldTarget and oldTarget.transportComponent:
+		oldTarget.transportComponent.inputs -= 1
 	if building == null:
 		toTransport.erase(outputCell)
 	else:
 		toTransport[outputCell] = building
+		if building.transportComponent:
+			building.transportComponent.inputs += 1
 
 ## Every output cell this building can link from (one per distinct slot cell).
 func get_output_cells() -> Array[Vector2i]:

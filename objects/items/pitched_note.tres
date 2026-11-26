@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ItemResource" format=3 uid="uid://n12wk8o658aq"]
+
+[ext_resource type="Script" uid="uid://cpxvtu6cs2fuq" path="res://helpers/item_resource.gd" id="1_whqdx"]
+
+[resource]
+script = ExtResource("1_whqdx")
+itemName = "Pitched Note"
+description = "A pitched note, this'll get you everywhere in music."
+frame = 1
+metadata/_custom_type_script = "uid://cpxvtu6cs2fuq"

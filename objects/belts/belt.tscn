@@ -14,7 +14,7 @@
 script = ExtResource("3_d5ujk")
 buildingName = "Belt"
 buildingType = 3
-validOutputBuildings = Array[int]([4])
+validOutputBuildings = Array[int]([4, 6, 3])
 metadata/_custom_type_script = "uid://clfio2dyahcm3"
 
 [node name="Belt" type="Node2D" unique_id=1965592939 node_paths=PackedStringArray("line2D", "transportComponent", "inventoryComponent", "linkingComponent", "visualComponent")]

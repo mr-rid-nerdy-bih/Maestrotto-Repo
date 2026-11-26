@@ -6,6 +6,9 @@ extends Resource
 @export_group("Identity")
 @export var buildingName: String
 @export var buildingType: BuildingTypes.Type
+## How many cells the building covers, counted right and down from the cell
+## it's placed on. Slot cells (inputCells/outputCells) are offsets inside this area.
+@export var size: Vector2i = Vector2i.ONE
 
 @export_group("Visual")
 @export var texture: Texture
@@ -32,6 +35,10 @@ extends Resource
 @export var validOutputBuildings: Array[BuildingTypes.Type] = []
 ## Moves inputs straight to outputs every tick. Leave off for crafters.
 @export var passThroughInput: bool = false
+## Max Distance for a link.
+@export var maxLinkDistance: float = 1.00
+## Max input buildings for linking.
+@export var maxLinkInputs: int = 1
 
 @export_group("Can Generate")
 @export_custom(PROPERTY_HINT_GROUP_ENABLE, "") var canGenerate: bool = false
@@ -47,6 +54,7 @@ extends Resource
 
 ## Runs the custom behaviour script for [param building], creating it if needed.
 func custom_behavior(building: Building) -> void:
+	@warning_ignore("untyped_declaration")
 	var instance = building.behaviorInstance
 	if not instance and customBehavior:
 		instance = customBehavior.new()

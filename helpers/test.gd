@@ -8,6 +8,12 @@ var isBelting := false
 var dir: Vector2 = Vector2.LEFT
 var enumValues := BuildingTypes.Type.values()
 
+## The ghost building currently shown, or null.
+var previewBuilding: Building
+## Preview outline colours: free spot vs. blocked by another machine.
+var canPlaceColor := Color.GREEN
+var blockedColor := Color.RED
+
 @onready var beltGroup: Node2D = $Belt
 @onready var machinesGroup: Node2D = $Machines
 
@@ -17,7 +23,7 @@ func _ready() -> void:
 	
 	change_preview(null, true)
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	visible = InputManager.currentMode == 1
 	
 	var pos := GridManager.get_coords_at(GridManager.cam.get_global_mouse_position())
@@ -29,6 +35,11 @@ func _process(delta: float) -> void:
 	else:
 		machinesGroup.visible = true
 		beltGroup.visible = false
+
+	# Outline the ghost green where it fits, red where another machine is in the way.
+	if is_instance_valid(previewBuilding) and visible:
+		var fits := GridManager.can_place_building(previewBuilding.buildingResource.buildingType, pos)
+		previewBuilding.visualComponent.set_outline(true, canPlaceColor if fits else blockedColor)
 
 ## Rotates or cycles the previewed building, then rebuilds the preview.
 ## NONE and BELT are skipped since they can't be placed as machines.
@@ -60,8 +71,10 @@ func change_preview(event: InputEvent, skipEventCheck: bool) -> void:
 		for i in machinesGroup.get_children():
 			i.queue_free()
 		machinesGroup.add_child(currentBuilding)
-		
-		currentBuilding.position = Vector2.ZERO
+
+		# Same anchor as placed buildings, so the ghost lines up with the real thing.
+		currentBuilding.position = currentBuilding.visualComponent.get_anchor_offset()
+		previewBuilding = currentBuilding
 
 ## The selected building as {type, dir}, for placing.
 func get_current_building() -> Dictionary:
