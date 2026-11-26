@@ -69,9 +69,9 @@ func on_tick() -> void:
 	if not buildingResource.customBehaviorUsesProcess:
 		buildingResource.custom_behavior(self)
 
-## Sends this building's output to [param building]. Pass null to unlink.
-func link_to_building(building: Building) -> void:
-	transportComponent.toTransport = building
+## Sends the output of [param outputCell] to [param building]. Pass null to unlink that cell.
+func link_to_building(building: Building, outputCell: Vector2i = Vector2i.ZERO) -> void:
+	transportComponent.set_target(outputCell, building)
 	linkingComponent.set_link_at_link_group()
 
 # --- Hooks subclasses can override (see belt.gd) ---------------------------

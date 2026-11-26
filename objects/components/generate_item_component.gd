@@ -38,14 +38,19 @@ func generate() -> void:
 	for res: ItemResource in recipe.outputItems:
 		if res == null or res.is_nothing():
 			continue
-		inventoryComponent.insert(make_item(res), Side.OUTPUT)
+		var newItem := make_item(res)
+		# has_room_for() checks each output on its own, so a recipe with
+		# several outputs can still overflow a slot. The item was never added
+		# to the tree, so free it here or it leaks.
+		if not inventoryComponent.insert(newItem, Side.OUTPUT):
+			newItem.free()
 
 	currentCooldown = 0.0
 
 ## True if every output item fits in the output slots.
 func has_room_for(outputs: Array[ItemResource]) -> bool:
-	# Good enough for 1-item outputs; multi-output recipes into one slot
-	# would need a proper "free space" count.
+	# Checks each output on its own, so several outputs sharing one slot can
+	# still overflow it. generate() frees any item that doesn't fit.
 	for res: ItemResource in outputs:
 		if res and not res.is_nothing() and not inventoryComponent.can_insert(res, Side.OUTPUT):
 			return false
